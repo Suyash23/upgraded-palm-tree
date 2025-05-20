@@ -12,32 +12,30 @@ class SuperBoardWidget extends StatefulWidget {
 }
 
 class _SuperBoardWidgetState extends State<SuperBoardWidget>
-    with SingleTickerProviderStateMixin { // Use TickerProviderStateMixin for single controller
+    with SingleTickerProviderStateMixin {
   late AnimationController _mainGridController;
   late Animation<double> _mainGridAnimation;
 
-  // To trigger mini-board animations with a delay
   bool _startMiniBoardAnimations = false;
 
   @override
   void initState() {
     super.initState();
     _mainGridController = AnimationController(
-      duration: const Duration(milliseconds: 800), // As per spec
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
     _mainGridAnimation = CurvedAnimation(
       parent: _mainGridController,
-      curve: const Cubic(0.65, 0, 0.35, 1), // As per spec
+      curve: const Cubic(0.65, 0, 0.35, 1),
     )..addListener(() {
-        setState(() {}); // Redraw on animation change
+        setState(() {});
       });
 
     _mainGridController.forward();
 
-    // After main grid animation starts, trigger mini-boards with a delay
-    Future.delayed(const Duration(milliseconds: 50), () { // 50ms delay as per spec (relative to main grid start)
+    Future.delayed(const Duration(milliseconds: 50), () {
       if (mounted) {
         setState(() {
           _startMiniBoardAnimations = true;
@@ -68,10 +66,18 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
           ),
           itemCount: 9,
           itemBuilder: (context, index) {
-            return MiniBoardWidget(
-              miniBoardIndex: index,
-              isPlayable: activeMiniBoardIndex == null || activeMiniBoardIndex == index,
-              startAnimation: _startMiniBoardAnimations, // Pass trigger
+            // Get the status of the current mini-board
+            String? boardStatus = gameState.superBoardState[index];
+
+            return Padding(
+              padding: const EdgeInsets.all(6.0), // Changed to 6.0
+              child: MiniBoardWidget(
+                miniBoardIndex: index,
+                // Determine isPlayable based on activeMiniBoardIndex AND if the board itself is NOT decided
+                isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
+                startAnimation: _startMiniBoardAnimations,
+                boardStatus: boardStatus, // Pass the board status
+              ),
             );
           },
         ),
