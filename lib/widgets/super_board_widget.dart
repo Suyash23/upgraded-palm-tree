@@ -66,13 +66,17 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
           ),
           itemCount: 9,
           itemBuilder: (context, index) {
-            // This is the critical part with Padding
-            return Padding( 
+            // Get the status of the current mini-board
+            String? boardStatus = gameState.superBoardState[index];
+
+            return Padding(
               padding: const EdgeInsets.all(6.0), // Changed to 6.0
               child: MiniBoardWidget(
                 miniBoardIndex: index,
-                isPlayable: activeMiniBoardIndex == null || activeMiniBoardIndex == index,
+                // Determine isPlayable based on activeMiniBoardIndex AND if the board itself is NOT decided
+                isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
                 startAnimation: _startMiniBoardAnimations,
+                boardStatus: boardStatus, // Pass the board status
               ),
             );
           },
