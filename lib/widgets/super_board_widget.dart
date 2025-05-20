@@ -68,7 +68,7 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
           itemBuilder: (context, index) {
             // This is the critical part with Padding
             return Padding( 
-              padding: const EdgeInsets.all(4.0), 
+              padding: const EdgeInsets.all(6.0), // Changed to 6.0
               child: MiniBoardWidget(
                 miniBoardIndex: index,
                 isPlayable: activeMiniBoardIndex == null || activeMiniBoardIndex == index,
