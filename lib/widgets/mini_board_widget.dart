@@ -55,7 +55,6 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
   Animation<double>? _stage2WinningLineOpacityAnim;
   Animation<double>? _stage2WinningLineScaleAnim; 
 
-  // New state variables for Stage 3/4 Win Animation
   AnimationController? _stage3_4WinClearAndGrowController;
   Animation<double>? _stage3GridOpacityAnim;
   Animation<double>? _stage3GridScaleAnim;
@@ -63,6 +62,8 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
   List<Animation<double>> _stage3NonWinningMarkScaleAnims = [];
   List<int> _nonWinningCellIndicesStage3 = []; 
   bool _isStage3_4WinClearingAndGrowing = false; 
+
+  bool _pendingWinAnimationSetup = false; 
 
   @override
   void initState() {
@@ -133,47 +134,36 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
           _drawAnimationController.reset();
           _drawAnimationController.forward().whenCompleteOrCancel(() {
             if (mounted && _drawAnimationController.status == AnimationStatus.completed) {
-              setState(() { _isDrawAnimationPlaying = false; });
+               // Keep the final state of draw animation (symbol visible)
+               // setState(() { _isDrawAnimationPlaying = false; }); // Don't set to false
             }
           });
         }
-      } else { 
-        final gameState = Provider.of<GameState>(context, listen: false);
-        List<String?> currentMiniBoardCells = gameState.miniBoardStates[widget.miniBoardIndex];
-        if (mounted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return; 
-            final boardSize = context.size; 
-            if (boardSize != null) {
-              _winningLineCoords = _calculateWinningLineCoords(currentMiniBoardCells, boardSize);
-              if (_winningLineCoords != null) { 
-                _isWinAnimationPlaying = true;
-                _winningLineAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-                  CurvedAnimation(parent: _winAnimationController, curve: Curves.easeInOut)
-                )..addListener(() { setState(() {}); })
-                 ..addStatusListener((status) {
-                    if (status == AnimationStatus.completed) {
-                        if (mounted) {
-                            _startStage2WinConvergence(); 
-                        }
-                    }
-                 });
-                _winAnimationController.reset();
-                _winAnimationController.forward();
-              }
-            }
+      } else { // A win ('X' or 'O') just happened
+         if (mounted) {
+          _winAnimationPlayer = widget.boardStatus; 
+          setState(() {
+            _pendingWinAnimationSetup = true; 
+            _isWinAnimationPlaying = false; 
+            _isStage2WinConverging = false; 
+            _isStage3_4WinClearingAndGrowing = false;
+            _winAnimationController.reset(); 
+            _stage2WinConvergeController?.reset();
+            _stage3_4WinClearAndGrowController?.reset();
           });
         }
       }
     } else if (widget.boardStatus == null && oldWidget.boardStatus != null) {
+      // Board was reset
       _winAnimationController.reset();
       _drawAnimationController.reset();
       _stage2WinConvergeController?.reset(); 
-      _stage3_4WinClearAndGrowController?.reset(); // Add this
+      _stage3_4WinClearAndGrowController?.reset(); 
       _isWinAnimationPlaying = false;
       _isDrawAnimationPlaying = false;
       _isStage2WinConverging = false; 
-      _isStage3_4WinClearingAndGrowing = false; // Add this
+      _isStage3_4WinClearingAndGrowing = false; 
+      _pendingWinAnimationSetup = false; // Reset flag
       _winningLineCoords = null;
       _winAnimationPlayer = null;
       _winningCellIndices = null;
@@ -181,9 +171,9 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
       _convergingMarkPositionAnims.clear();
       _convergingMarkScaleAnims.clear();
       _convergingMarkOpacityAnims.clear();
-      _stage3NonWinningMarkOpacityAnims.clear(); // Add this
-      _stage3NonWinningMarkScaleAnims.clear(); // Add this
-      _nonWinningCellIndicesStage3.clear(); // Add this
+      _stage3NonWinningMarkOpacityAnims.clear(); 
+      _stage3NonWinningMarkScaleAnims.clear(); 
+      _nonWinningCellIndicesStage3.clear(); 
     }
   }
 
@@ -194,83 +184,134 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
     _drawAnimationController.dispose(); 
     _shakeAnimationController.dispose(); 
     _stage2WinConvergeController?.dispose(); 
-    _stage3_4WinClearAndGrowController?.dispose(); // Add this
+    _stage3_4WinClearAndGrowController?.dispose(); 
     super.dispose();
   }
 
-void _startStage2WinConvergence() {
-  if (!mounted || _winningCellIndices == null || _winAnimationPlayer == null) return;
+  void _startStage2WinConvergence(Size boardSize) { 
+    if (!mounted || _winningCellIndices == null || _winAnimationPlayer == null) return;
 
-  // Set flags first
-  _isWinAnimationPlaying = false; 
-  _isStage2WinConverging = true;
+    setState(() {
+      _isWinAnimationPlaying = false; 
+      _isStage2WinConverging = true;
 
-  _stage2WinConvergeController?.dispose(); 
-  _stage2WinConvergeController = AnimationController(
-    duration: const Duration(milliseconds: 700), 
-    vsync: this,
-  )..addListener(() { setState(() {}); }) // Single listener for all animations driven by this controller
-   ..addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        if (mounted) setState(() { 
-          // Stage 2 complete. TODO: Trigger Stage 3 & 4
-          // For now, it will just display the end state of Stage 2.
+      _stage2WinConvergeController?.dispose(); 
+      _stage2WinConvergeController = AnimationController(
+        duration: const Duration(milliseconds: 700), 
+        vsync: this,
+      )..addListener(() { setState(() {}); }) 
+       ..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            if (mounted) {
+              _startStage3_4WinClearAndGrow(boardSize); // Pass boardSize
+            }
+          }
         });
+
+      _convergingMarkPositionAnims.clear();
+      _convergingMarkScaleAnims.clear();
+      _convergingMarkOpacityAnims.clear();
+
+      double cellWidth = boardSize.width / 3;
+      double cellHeight = boardSize.height / 3;
+      Offset boardCenter = Offset(boardSize.width / 2, boardSize.height / 2);
+
+      if (_winningCellIndices!.contains(4)) { 
+          _heroMarkIndexInPattern = _winningCellIndices!.indexOf(4);
+      } else {
+          _heroMarkIndexInPattern = 1; 
       }
+      
+      for (int i = 0; i < 3; i++) {
+        int cellIndex = _winningCellIndices![i];
+        int row = cellIndex ~/ 3;
+        int col = cellIndex % 3;
+        Offset startPos = Offset(col * cellWidth + cellWidth / 2, row * cellHeight + cellHeight / 2);
+        
+        _convergingMarkPositionAnims.add(
+          Tween<Offset>(begin: startPos, end: boardCenter).animate(CurvedAnimation(
+            parent: _stage2WinConvergeController!, curve: Curves.easeOutCubic))
+        );
+
+        bool isHero = (i == _heroMarkIndexInPattern);
+        _convergingMarkScaleAnims.add(
+          Tween<double>(begin: 1.0, end: isHero ? 0.35 : 0.01).animate(CurvedAnimation(
+            parent: _stage2WinConvergeController!, curve: Curves.easeOutCubic))
+        );
+        _convergingMarkOpacityAnims.add(
+          Tween<double>(begin: 1.0, end: isHero ? 1.0 : 0.0).animate(CurvedAnimation(
+            parent: _stage2WinConvergeController!, curve: isHero ? Curves.linear : const Interval(0.0, 0.85, curve: Curves.easeOut)))
+        );
+      }
+      
+      _stage2WinningLineOpacityAnim = Tween<double>(begin: 1.0, end: 0.0).animate(
+        CurvedAnimation(parent: _stage2WinConvergeController!, curve: const Interval(0.0, 0.7, curve: Curves.easeOut))
+      );
+      _stage2WinningLineScaleAnim = Tween<double>(begin: 1.0, end: 0.01).animate(
+        CurvedAnimation(parent: _stage2WinConvergeController!, curve: const Interval(0.0, 0.7, curve: Curves.easeOut))
+      );
+      
+      _stage2WinConvergeController!.forward();
     });
-
-  _convergingMarkPositionAnims.clear();
-  _convergingMarkScaleAnims.clear();
-  _convergingMarkOpacityAnims.clear();
-
-  final boardSize = context.size;
-  if (boardSize == null) { 
-       if(mounted) setState(() => _isStage2WinConverging = false); 
-       return;
   }
-  double cellWidth = boardSize.width / 3;
-  double cellHeight = boardSize.height / 3;
-  Offset boardCenter = Offset(boardSize.width / 2, boardSize.height / 2);
 
-  if (_winningCellIndices!.contains(4)) { 
-      _heroMarkIndexInPattern = _winningCellIndices!.indexOf(4);
-  } else {
-      _heroMarkIndexInPattern = 1; 
-  }
-  
-  for (int i = 0; i < 3; i++) {
-    int cellIndex = _winningCellIndices![i];
-    int row = cellIndex ~/ 3;
-    int col = cellIndex % 3;
-    Offset startPos = Offset(col * cellWidth + cellWidth / 2, row * cellHeight + cellHeight / 2);
-    
-    _convergingMarkPositionAnims.add(
-      Tween<Offset>(begin: startPos, end: boardCenter).animate(CurvedAnimation(
-        parent: _stage2WinConvergeController!, curve: Curves.easeOutCubic))
-    );
+  void _startStage3_4WinClearAndGrow(Size boardSize) { 
+    if (!mounted || _winningCellIndices == null || _winAnimationPlayer == null) {
+      setState(() {
+        _isStage2WinConverging = false;
+        _isWinAnimationPlaying = false; 
+        _isDrawAnimationPlaying = false;
+      });
+      return;
+    }
+    final gameState = Provider.of<GameState>(context, listen: false);
 
-    bool isHero = (i == _heroMarkIndexInPattern);
-    _convergingMarkScaleAnims.add(
-      Tween<double>(begin: 1.0, end: isHero ? 0.35 : 0.01).animate(CurvedAnimation(
-        parent: _stage2WinConvergeController!, curve: Curves.easeOutCubic))
-    );
-    _convergingMarkOpacityAnims.add(
-      Tween<double>(begin: 1.0, end: isHero ? 1.0 : 0.0).animate(CurvedAnimation(
-        parent: _stage2WinConvergeController!, curve: isHero ? Curves.linear : const Interval(0.0, 0.85, curve: Curves.easeOut)))
-    );
+    setState(() {
+      _isStage2WinConverging = false; 
+      _isStage3_4WinClearingAndGrowing = true;
+
+      _stage3_4WinClearAndGrowController?.dispose();
+      _stage3_4WinClearAndGrowController = AnimationController(
+        duration: const Duration(milliseconds: 600), 
+        vsync: this,
+      );
+
+      _stage3GridOpacityAnim = Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(
+          parent: _stage3_4WinClearAndGrowController!,
+          curve: const Interval(0.0, 0.83, curve: Curves.easeOut))); 
+      _stage3GridScaleAnim = Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(
+          parent: _stage3_4WinClearAndGrowController!,
+          curve: const Interval(0.0, 0.83, curve: Curves.easeOut)));
+
+      _nonWinningCellIndicesStage3.clear();
+      _stage3NonWinningMarkOpacityAnims.clear();
+      _stage3NonWinningMarkScaleAnims.clear();
+
+      for (int i = 0; i < 9; i++) {
+        if (!(_winningCellIndices?.contains(i) ?? false)) {
+          if (gameState.miniBoardStates[widget.miniBoardIndex][i] != null) {
+            _nonWinningCellIndicesStage3.add(i);
+            _stage3NonWinningMarkOpacityAnims.add(Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(
+                parent: _stage3_4WinClearAndGrowController!,
+                curve: const Interval(0.0, 0.5, curve: Curves.easeOut)))); 
+            _stage3NonWinningMarkScaleAnims.add(Tween<double>(begin: 1.0, end: 0.0).animate(CurvedAnimation(
+                parent: _stage3_4WinClearAndGrowController!,
+                curve: const Interval(0.0, 0.5, curve: Curves.easeOut))));
+          }
+        }
+      }
+      
+      _stage3_4WinClearAndGrowController!.addListener(() { setState(() {}); });
+      _stage3_4WinClearAndGrowController!.addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          if (mounted) setState(() { 
+            _isStage3_4WinClearingAndGrowing = false; 
+          });
+        }
+      });
+      _stage3_4WinClearAndGrowController!.forward();
+    });
   }
-  
-  // Initialize animations for the winning line itself during Stage 2
-  _stage2WinningLineOpacityAnim = Tween<double>(begin: 1.0, end: 0.0).animate(
-    CurvedAnimation(parent: _stage2WinConvergeController!, curve: const Interval(0.0, 0.7, curve: Curves.easeOut))
-  );
-  _stage2WinningLineScaleAnim = Tween<double>(begin: 1.0, end: 0.01).animate(
-    CurvedAnimation(parent: _stage2WinConvergeController!, curve: const Interval(0.0, 0.7, curve: Curves.easeOut))
-  );
-  
-  _stage2WinConvergeController!.forward();
-  setState(() {}); // To ensure the build method runs with _isStage2WinConverging = true
-}
 
   List<Offset>? _calculateWinningLineCoords(List<String?> boardCells, Size boardSize) {
     const List<List<int>> winPatterns = [
@@ -292,7 +333,7 @@ void _startStage2WinConvergence() {
 
     if (winner == null || patternIndices == null) return null;
     _winAnimationPlayer = winner; 
-    _winningCellIndices = List<int>.from(patternIndices); // Ensure this is here
+    _winningCellIndices = List<int>.from(patternIndices); 
 
     double cellWidth = boardSize.width / 3;
     double cellHeight = boardSize.height / 3;
@@ -337,221 +378,283 @@ void _startStage2WinConvergence() {
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameState>(context, listen: false); 
 
-    if (_isWinAnimationPlaying && _winningLineCoords != null && _winningLineAnimation != null && _winAnimationPlayer != null) {
-      // Stage 1: Winning Line Animation
-      return AspectRatio(
-        aspectRatio: 1.0,
-        child: Stack(
-          children: [
-            CustomPaint(
-              painter: MiniGridPainter(isPlayable: false, progress: 1.0),
-              size: Size.infinite,
-            ),
-            GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-              itemCount: 9,
-              itemBuilder: (context, cellIndex) {
-                String? cellMark = gameState.getCellState(widget.miniBoardIndex, cellIndex);
-                return CellWidget( 
-                  miniBoardIndex: widget.miniBoardIndex,
-                  cellIndexInMiniBoard: cellIndex,
-                  mark: cellMark,
-                  isPlayableCell: false, 
-                  onTap: null,
-                );
-              },
-            ),
-            CustomPaint(
-              painter: WinningLinePainter(
-                lineCoords: _winningLineCoords!,
-                player: _winAnimationPlayer!,
-                progress: _winningLineAnimation!.value,
+    return LayoutBuilder( 
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final Size boardSize = constraints.biggest; 
+
+        if (_pendingWinAnimationSetup && widget.boardStatus != null && widget.boardStatus != 'DRAW') {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || !_pendingWinAnimationSetup) return; 
+
+            List<String?> currentMiniBoardCells = gameState.miniBoardStates[widget.miniBoardIndex];
+            final tempWinningLineCoords = _calculateWinningLineCoords(currentMiniBoardCells, boardSize);
+
+            if (tempWinningLineCoords != null && _winAnimationPlayer != null) {
+              setState(() {
+                _winningLineCoords = tempWinningLineCoords;
+                _isWinAnimationPlaying = true;
+                _pendingWinAnimationSetup = false; 
+
+                _winningLineAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+                  CurvedAnimation(parent: _winAnimationController, curve: Curves.easeInOut)
+                )..addListener(() { setState(() {}); })
+                 ..addStatusListener((status) {
+                    if (status == AnimationStatus.completed) {
+                        if (mounted) {
+                            _startStage2WinConvergence(boardSize); 
+                        }
+                    }
+                 });
+                _winAnimationController.reset();
+                _winAnimationController.forward();
+              });
+            } else {
+              if (mounted) setState(() { _pendingWinAnimationSetup = false; });
+            }
+          });
+        }
+        
+        if (_isStage3_4WinClearingAndGrowing) {
+          double cellWidth = boardSize.width / 3;
+          double cellHeight = boardSize.height / 3;
+          Offset boardCenter = Offset(boardSize.width / 2, boardSize.height / 2);
+
+          List<Widget> stage3Elements = [];
+
+          if (_stage3GridOpacityAnim != null && _stage3GridScaleAnim != null) {
+            stage3Elements.add(Opacity(
+              opacity: _stage3GridOpacityAnim!.value,
+              child: Transform.scale(
+                scale: _stage3GridScaleAnim!.value,
+                child: CustomPaint(painter: MiniGridPainter(isPlayable: false, progress: 1.0), size: Size.infinite),
               ),
-              size: Size.infinite,
-            ),
-          ],
-        ),
-      );
-    } else if (_isStage2WinConverging) {
-      // Stage 2: Converging Marks Animation
-      final boardSize = context.size ?? const Size(100,100); 
-      double cellWidth = boardSize.width / 3;
-      double cellHeight = boardSize.height / 3;
-
-      List<Widget> convergingElements = [];
-
-      convergingElements.add(CustomPaint(painter: MiniGridPainter(isPlayable: false, progress: 1.0), size: Size.infinite));
-      
-      for (int i = 0; i < 9; i++) {
-        bool isWinningCell = _winningCellIndices?.contains(i) ?? false;
-        if (!isWinningCell) { 
-          String? mark = gameState.getCellState(widget.miniBoardIndex, i);
-          if (mark != null) {
-            int r = i ~/ 3; int c = i % 3;
-            convergingElements.add(Positioned(
-              left: c * cellWidth, top: r * cellHeight,
-              width: cellWidth, height: cellHeight,
-              child: mark == 'X' 
-                  ? CustomPaint(painter: XPainter(progress:1.0), size: Size.infinite) 
-                  : CustomPaint(painter: OPainter(progress:1.0), size: Size.infinite),
             ));
           }
-        }
-      }
-      
-      if (_winningCellIndices != null && _winAnimationPlayer != null && 
-          _convergingMarkPositionAnims.length == 3 &&
-          _convergingMarkScaleAnims.length == 3 &&
-          _convergingMarkOpacityAnims.length == 3) {
-        for (int i = 0; i < 3; i++) { 
-          Offset currentPos = _convergingMarkPositionAnims[i].value;
-          double currentScale = _convergingMarkScaleAnims[i].value;
-          double currentOpacity = _convergingMarkOpacityAnims[i].value;
 
-          Widget markWidget = (_winAnimationPlayer == 'X')
-              ? CustomPaint(painter: XPainter(progress: 1.0), size: Size(cellWidth, cellHeight))
-              : CustomPaint(painter: OPainter(progress: 1.0), size: Size(cellWidth, cellHeight));
+          for (int i = 0; i < _nonWinningCellIndicesStage3.length; i++) {
+            int cellIndex = _nonWinningCellIndicesStage3[i];
+            String? mark = gameState.miniBoardStates[widget.miniBoardIndex][cellIndex]; 
+            if (mark == null) continue; 
 
-          convergingElements.add(
-            Positioned(
-              left: currentPos.dx - (cellWidth / 2 * currentScale), 
-              top: currentPos.dy - (cellHeight / 2 * currentScale),
-              width: cellWidth * currentScale, 
-              height: cellHeight * currentScale,
+            int r = cellIndex ~/ 3; int c = cellIndex % 3;
+            stage3Elements.add(Positioned(
+              left: c * cellWidth, top: r * cellHeight,
+              width: cellWidth, height: cellHeight,
               child: Opacity(
-                opacity: currentOpacity,
-                child: markWidget,
+                opacity: _stage3NonWinningMarkOpacityAnims[i].value,
+                child: Transform.scale(
+                  scale: _stage3NonWinningMarkScaleAnims[i].value,
+                  child: mark == 'X'
+                      ? CustomPaint(painter: XPainter(progress: 1.0), size: Size.infinite)
+                      : CustomPaint(painter: OPainter(progress: 1.0), size: Size.infinite),
+                ),
               ),
+            ));
+          }
+          
+          if (_heroMarkIndexInPattern != null && _winAnimationPlayer != null && _winningCellIndices != null) {
+            double heroScale = 0.35; 
+            Widget heroMarkWidget = (_winAnimationPlayer == 'X')
+                ? CustomPaint(painter: XPainter(progress: 1.0), size: Size(cellWidth, cellHeight))
+                : CustomPaint(painter: OPainter(progress: 1.0), size: Size(cellWidth, cellHeight));
+            
+            stage3Elements.add(
+              Positioned(
+                left: boardCenter.dx - (cellWidth / 2 * heroScale),
+                top: boardCenter.dy - (cellHeight / 2 * heroScale),
+                width: cellWidth * heroScale,
+                height: cellHeight * heroScale,
+                child: Opacity(opacity: 1.0, child: heroMarkWidget), 
+              )
+            );
+          }
+          return AspectRatio(aspectRatio: 1.0, child: Stack(children: stage3Elements));
+        } else if (_isWinAnimationPlaying && _winningLineCoords != null && _winningLineAnimation != null && _winAnimationPlayer != null) {
+          return AspectRatio(
+            aspectRatio: 1.0,
+            child: Stack(
+              children: [
+                CustomPaint(
+                  painter: MiniGridPainter(isPlayable: false, progress: 1.0),
+                  size: Size.infinite,
+                ),
+                GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                  itemCount: 9,
+                  itemBuilder: (context, cellIndex) {
+                    String? cellMark = gameState.getCellState(widget.miniBoardIndex, cellIndex);
+                    return CellWidget( 
+                      miniBoardIndex: widget.miniBoardIndex,
+                      cellIndexInMiniBoard: cellIndex,
+                      mark: cellMark,
+                      isPlayableCell: false, 
+                      onTap: null,
+                    );
+                  },
+                ),
+                CustomPaint(
+                  painter: WinningLinePainter(
+                    lineCoords: _winningLineCoords!,
+                    player: _winAnimationPlayer!,
+                    progress: _winningLineAnimation!.value,
+                  ),
+                  size: Size.infinite,
+                ),
+              ],
+            ),
+          );
+        } else if (_isStage2WinConverging) {
+          double cellWidth = boardSize.width / 3;
+          double cellHeight = boardSize.height / 3;
+
+          List<Widget> convergingElements = [];
+
+          convergingElements.add(CustomPaint(painter: MiniGridPainter(isPlayable: false, progress: 1.0), size: Size.infinite));
+          
+          for (int i = 0; i < 9; i++) {
+            bool isWinningCell = _winningCellIndices?.contains(i) ?? false;
+            if (!isWinningCell) { 
+              String? mark = gameState.getCellState(widget.miniBoardIndex, i);
+              if (mark != null) {
+                int r = i ~/ 3; int c = i % 3;
+                convergingElements.add(Positioned(
+                  left: c * cellWidth, top: r * cellHeight,
+                  width: cellWidth, height: cellHeight,
+                  child: mark == 'X' 
+                      ? CustomPaint(painter: XPainter(progress:1.0), size: Size.infinite) 
+                      : CustomPaint(painter: OPainter(progress:1.0), size: Size.infinite),
+                ));
+              }
+            }
+          }
+          
+          if (_winningCellIndices != null && _winAnimationPlayer != null && 
+              _convergingMarkPositionAnims.length == 3 &&
+              _convergingMarkScaleAnims.length == 3 &&
+              _convergingMarkOpacityAnims.length == 3) {
+            for (int i = 0; i < 3; i++) { 
+              Offset currentPos = _convergingMarkPositionAnims[i].value;
+              double currentScale = _convergingMarkScaleAnims[i].value;
+              double currentOpacity = _convergingMarkOpacityAnims[i].value;
+
+              Widget markWidget = (_winAnimationPlayer == 'X')
+                  ? CustomPaint(painter: XPainter(progress: 1.0), size: Size(cellWidth, cellHeight))
+                  : CustomPaint(painter: OPainter(progress: 1.0), size: Size(cellWidth, cellHeight));
+
+              convergingElements.add(
+                Positioned(
+                  left: currentPos.dx - (cellWidth / 2 * currentScale), 
+                  top: currentPos.dy - (cellHeight / 2 * currentScale),
+                  width: cellWidth * currentScale, 
+                  height: cellHeight * currentScale,
+                  child: Opacity(
+                    opacity: currentOpacity,
+                    child: markWidget,
+                  ),
+                )
+              );
+            }
+          }
+          
+          if (_winningLineCoords != null && _winAnimationPlayer != null && 
+              _stage2WinningLineOpacityAnim != null && _stage2WinningLineScaleAnim != null) {
+            convergingElements.add(
+              Opacity(
+                opacity: _stage2WinningLineOpacityAnim!.value,
+                child: Transform.scale(
+                  scale: _stage2WinningLineScaleAnim!.value,
+                  child: CustomPaint(
+                    painter: WinningLinePainter(
+                      lineCoords: _winningLineCoords!, 
+                      player: _winAnimationPlayer!,
+                      progress: 1.0, 
+                    ),
+                    size: Size.infinite, 
+                  ),
+                ),
+              )
+            );
+          }
+
+          return AspectRatio(aspectRatio: 1.0, child: Stack(children: convergingElements));
+        } else if (_isDrawAnimationPlaying) {
+            return AspectRatio(
+              aspectRatio: 1.0,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Opacity(
+                    opacity: 1.0 - _drawFadeOutAnimation.value, 
+                    child: Transform.scale(
+                      scale: 1.0 - (_drawFadeOutAnimation.value * 0.5), 
+                      child: Stack( 
+                        children: [
+                           CustomPaint(
+                            painter: MiniGridPainter(
+                              isPlayable: false, 
+                              progress: 1.0,   
+                            ),
+                            size: Size.infinite,
+                          ),
+                          GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                            itemCount: 9,
+                            itemBuilder: (context, cellIndex) {
+                              String? cellMark = gameState.getCellState(widget.miniBoardIndex, cellIndex);
+                              return CellWidget(
+                                miniBoardIndex: widget.miniBoardIndex,
+                                cellIndexInMiniBoard: cellIndex,
+                                mark: cellMark,
+                                isPlayableCell: false, 
+                                onTap: null,
+                              );
+                            },
+                          ),
+                        ]
+                      ),
+                    ),
+                  ),
+                  Opacity(
+                    opacity: _drawSymbolFadeInAnimation.value,
+                    child: Transform.scale(
+                      scale: _drawSymbolScaleUpAnimation.value,
+                      child: const Center(
+                        child: Text(
+                          '½',
+                          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+        } else if (widget.boardStatus != null) { 
+          Widget finalDisplay;
+          switch(widget.boardStatus){
+            case 'X':finalDisplay=CustomPaint(painter:XPainter(progress:1.0),size:Size.infinite);break;
+            case 'O':finalDisplay=CustomPaint(painter:OPainter(progress:1.0),size:Size.infinite);break;
+            case 'DRAW':finalDisplay=const Center(child:Text('½',style:TextStyle(fontSize:40,fontWeight:FontWeight.bold,color:Colors.grey)));break;
+            default:finalDisplay=const SizedBox.shrink();
+          }
+          return AspectRatio(aspectRatio:1.0,child:Container(child:finalDisplay));
+        } else { 
+          return SlideTransition( 
+            position: _shakeAnimation,
+            child: AspectRatio(
+              aspectRatio:1.0,
+              child:CustomPaint(
+                painter:MiniGridPainter(isPlayable:widget.isPlayable,progress:_miniGridAnimation.value),
+                child:(_miniGridAnimation.value==1.0)
+                    ?GridView.builder(physics:const NeverScrollableScrollPhysics(),gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3),itemCount:9,itemBuilder:(c,ci){String? m=gameState.getCellState(widget.miniBoardIndex,ci);bool iCAP=widget.isPlayable&&m==null;return CellWidget(miniBoardIndex:widget.miniBoardIndex,cellIndexInMiniBoard:ci,mark:m,isPlayableCell:iCAP,onTap:()=>_attemptMoveOnCell(ci));})
+                    :const SizedBox.shrink()
+              )
             )
           );
         }
       }
-      
-      // Add the converging/fading winning line
-      if (_winningLineCoords != null && _winAnimationPlayer != null && 
-          _stage2WinningLineOpacityAnim != null && _stage2WinningLineScaleAnim != null) {
-        convergingElements.add(
-          Opacity(
-            opacity: _stage2WinningLineOpacityAnim!.value,
-            child: Transform.scale(
-              scale: _stage2WinningLineScaleAnim!.value,
-              child: CustomPaint(
-                painter: WinningLinePainter(
-                  lineCoords: _winningLineCoords!, 
-                  player: _winAnimationPlayer!,
-                  progress: 1.0, 
-                ),
-                size: Size.infinite, 
-              ),
-            ),
-          )
-        );
-      }
-
-      return AspectRatio(aspectRatio: 1.0, child: Stack(children: convergingElements));
-    } else if (_isDrawAnimationPlaying) {
-        // Draw Animation is Playing
-        return AspectRatio(
-          aspectRatio: 1.0,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Opacity(
-                opacity: 1.0 - _drawFadeOutAnimation.value, 
-                child: Transform.scale(
-                  scale: 1.0 - (_drawFadeOutAnimation.value * 0.5), 
-                  child: Stack( 
-                    children: [
-                       CustomPaint(
-                        painter: MiniGridPainter(
-                          isPlayable: false, 
-                          progress: 1.0,   
-                        ),
-                        size: Size.infinite,
-                      ),
-                      GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                        itemCount: 9,
-                        itemBuilder: (context, cellIndex) {
-                          String? cellMark = gameState.getCellState(widget.miniBoardIndex, cellIndex);
-                          return CellWidget(
-                            miniBoardIndex: widget.miniBoardIndex,
-                            cellIndexInMiniBoard: cellIndex,
-                            mark: cellMark,
-                            isPlayableCell: false, 
-                            onTap: null,
-                          );
-                        },
-                      ),
-                    ]
-                  ),
-                ),
-              ),
-              Opacity(
-                opacity: _drawSymbolFadeInAnimation.value,
-                child: Transform.scale(
-                  scale: _drawSymbolScaleUpAnimation.value,
-                  child: const Center(
-                    child: Text(
-                      '½',
-                      style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.grey),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-    } else if (widget.boardStatus != null) { 
-      Widget finalDisplay;
-      switch (widget.boardStatus) {
-        case 'X':
-          finalDisplay = CustomPaint(painter: XPainter(progress: 1.0), size: Size.infinite);
-          break;
-        case 'O':
-          finalDisplay = CustomPaint(painter: OPainter(progress: 1.0), size: Size.infinite);
-          break;
-        case 'DRAW':
-          finalDisplay = const Center(child: Text('½', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.grey)));
-          break;
-        default: finalDisplay = const SizedBox.shrink();
-      }
-      return AspectRatio(aspectRatio: 1.0, child: Container(child: finalDisplay));
-
-    } else { 
-      // Active board for play
-      return SlideTransition( 
-        position: _shakeAnimation,
-        child: AspectRatio(
-          aspectRatio: 1.0,
-          child: CustomPaint(
-            painter: MiniGridPainter(
-              isPlayable: widget.isPlayable,
-              progress: _miniGridAnimation.value,
-            ),
-            child: (_miniGridAnimation.value == 1.0)
-                ? GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                    itemCount: 9,
-                    itemBuilder: (context, cellIndex) {
-                      String? cellMark = gameState.getCellState(widget.miniBoardIndex, cellIndex);
-                      bool isCellActuallyPlayable = widget.isPlayable && cellMark == null;
-                      return CellWidget(
-                        miniBoardIndex: widget.miniBoardIndex,
-                        cellIndexInMiniBoard: cellIndex,
-                        mark: cellMark,
-                        isPlayableCell: isCellActuallyPlayable,
-                        onTap: () => _attemptMoveOnCell(cellIndex), 
-                      );
-                    },
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ),
-      );
-    }
+    );
   }
 }
