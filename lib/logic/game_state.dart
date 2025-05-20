@@ -40,15 +40,15 @@ class GameState extends ChangeNotifier {
 
 // In class GameState within lib/logic/game_state.dart
 
-void makeMove(int miniBoardIdx, int cellIdx) {
+bool makeMove(int miniBoardIdx, int cellIdx) { // Changed return type to bool
   // Validate the move
   if (!gameActive) {
     if (kDebugMode) { print("Game is not active. Overall winner: $overallWinner"); }
-    return; 
+    return false; // Game is over
   }
   if (miniBoardStates[miniBoardIdx][cellIdx] != null) {
     if (kDebugMode) { print("Cell $miniBoardIdx-$cellIdx is already occupied by ${miniBoardStates[miniBoardIdx][cellIdx]}."); }
-    return; 
+    return false; // Cell is not empty
   }
 
   // --- Start: Active Mini-Board Validation (Finalized for Step 4) ---
@@ -56,26 +56,19 @@ void makeMove(int miniBoardIdx, int cellIdx) {
 
   if (chosenBoardIsDecided) {
     if (kDebugMode) { print("Invalid move: Chosen mini-board $miniBoardIdx is already decided with status: ${superBoardState[miniBoardIdx]}."); }
-    return;
+    return false;
   }
 
   if (activeMiniBoardIndex != null) { // Player is forced to play in a specific mini-board
     if (miniBoardIdx != activeMiniBoardIndex) {
       if (kDebugMode) { print("Invalid move: Must play in active board $activeMiniBoardIndex, but tried to play in $miniBoardIdx."); }
-      return;
+      return false;
     }
-    // If activeMiniBoardIndex is set, it should imply superBoardState[activeMiniBoardIndex] is null.
-    // This is because the end of the previous makeMove should have set activeMiniBoardIndex to null if the target was decided.
-    // However, a redundant check can be here for safety, though it might indicate a logical flaw elsewhere if triggered.
     if (superBoardState[activeMiniBoardIndex!] != null) {
          if (kDebugMode) { print("Logical error: activeMiniBoardIndex ($activeMiniBoardIndex) is set, but that board is already decided (${superBoardState[activeMiniBoardIndex!]}). This shouldn't happen."); }
-        return; // Should not be able to play in a decided board.
+        return false; 
     }
-
   } 
-  // No specific else for activeMiniBoardIndex == null, because if it's null, player has free choice,
-  // and the `chosenBoardIsDecided` check above already ensures they can't play in a decided board.
-  
   // --- End: Active Mini-Board Validation ---
 
   String playerMakingMove = currentPlayer; 
@@ -98,12 +91,10 @@ void makeMove(int miniBoardIdx, int cellIdx) {
 
   if (gameActive) {
     currentPlayer = (playerMakingMove == 'X') ? 'O' : 'X';
-    
-    // Determine the next active mini-board (This is the "Sent-to-Concluded-Mini-Board" rule)
     if (superBoardState[cellIdx] == null) { 
-      activeMiniBoardIndex = cellIdx; // Target board is open, force player there
+      activeMiniBoardIndex = cellIdx; 
     } else { 
-      activeMiniBoardIndex = null; // Target board is concluded, player has free choice next
+      activeMiniBoardIndex = null; 
     }
   } else {
     activeMiniBoardIndex = null; 
@@ -114,6 +105,7 @@ void makeMove(int miniBoardIdx, int cellIdx) {
   }
 
   notifyListeners();
+  return true; // Move was successful
 }
 
   // Helper method to get cell state
