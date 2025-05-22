@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Import provider
+import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
-import 'logic/game_state.dart'; // Import GameState
+import 'screens/welcome_screen.dart'; // Import WelcomeScreen
+import 'logic/game_state.dart'; 
 
 void main() {
   runApp(
@@ -23,7 +24,12 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         fontFamily: 'Roboto',
       ),
-      home: const HomeScreen(),
+      initialRoute: '/', // Optional: explicitly set initial route
+      routes: {
+        '/': (context) => const WelcomeScreen(), // WelcomeScreen is home
+        '/game': (context) => const HomeScreen(),  // Named route for HomeScreen
+      },
+      // home: const WelcomeScreen(), // Set WelcomeScreen as home if not using initialRoute
     );
   }
 }
