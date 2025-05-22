@@ -99,11 +99,11 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
       vsync: this,
     );
     _shakeAnimation = TweenSequence<Offset>([
-      TweenSequenceItem(tween: Tween(begin: Offset.zero, end: const Offset(-0.05, 0.0)), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: const Offset(-0.05, 0.0), end: const Offset(0.05, 0.0)), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: const Offset(0.05, 0.0), end: const Offset(-0.05, 0.0)), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: const Offset(-0.05, 0.0), end: const Offset(0.05, 0.0)), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: const Offset(0.05, 0.0), end: Offset.zero), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: Offset.zero, end: const Offset(-0.10, 0.0)), weight: 1), // Changed
+      TweenSequenceItem(tween: Tween(begin: const Offset(-0.10, 0.0), end: const Offset(0.10, 0.0)), weight: 2), // Changed
+      TweenSequenceItem(tween: Tween(begin: const Offset(0.10, 0.0), end: const Offset(-0.10, 0.0)), weight: 2), // Changed
+      TweenSequenceItem(tween: Tween(begin: const Offset(-0.10, 0.0), end: const Offset(0.10, 0.0)), weight: 2), // Changed
+      TweenSequenceItem(tween: Tween(begin: const Offset(0.10, 0.0), end: Offset.zero), weight: 1), // Changed
     ]).animate(CurvedAnimation(
       parent: _shakeAnimationController,
       curve: const Cubic(.36,.07,.19,.97),
