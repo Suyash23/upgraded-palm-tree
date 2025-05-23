@@ -301,6 +301,12 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
         }
       }
       
+      // Stage 4: Hero Mark Growth (driven by the same controller)
+      _stage4HeroMarkScaleAnim = Tween<double>(begin: 0.35, end: 2.4).animate(CurvedAnimation(
+          parent: _stage3_4WinClearAndGrowController!,
+          curve: const Interval(0.0, 1.0, curve: Cubic(0.68, -0.55, 0.27, 1.55)) 
+      ));
+
       _stage3_4WinClearAndGrowController!.addListener(() { setState(() {}); });
       _stage3_4WinClearAndGrowController!.addStatusListener((status) {
         if (status == AnimationStatus.completed) {
@@ -419,10 +425,11 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
           double cellHeight = boardSize.height / 3;
           Offset boardCenter = Offset(boardSize.width / 2, boardSize.height / 2);
 
-          List<Widget> stage3Elements = [];
+          List<Widget> stage3_4Elements = []; // Renamed for clarity
 
+          // Animated Grid
           if (_stage3GridOpacityAnim != null && _stage3GridScaleAnim != null) {
-            stage3Elements.add(Opacity(
+            stage3_4Elements.add(Opacity(
               opacity: _stage3GridOpacityAnim!.value,
               child: Transform.scale(
                 scale: _stage3GridScaleAnim!.value,
@@ -431,13 +438,14 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
             ));
           }
 
+          // Animated Non-Winning Marks
           for (int i = 0; i < _nonWinningCellIndicesStage3.length; i++) {
             int cellIndex = _nonWinningCellIndicesStage3[i];
             String? mark = gameState.miniBoardStates[widget.miniBoardIndex][cellIndex]; 
             if (mark == null) continue; 
 
             int r = cellIndex ~/ 3; int c = cellIndex % 3;
-            stage3Elements.add(Positioned(
+            stage3_4Elements.add(Positioned(
               left: c * cellWidth, top: r * cellHeight,
               width: cellWidth, height: cellHeight,
               child: Opacity(
@@ -452,23 +460,28 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
             ));
           }
           
-          if (_heroMarkIndexInPattern != null && _winAnimationPlayer != null && _winningCellIndices != null) {
-            double heroScale = 0.35; 
+          // Stage 4: Animated "Hero" Mark (growing)
+          if (_heroMarkIndexInPattern != null && _winAnimationPlayer != null && _winningCellIndices != null && _stage4HeroMarkScaleAnim != null) {
+            double heroAnimatedScale = _stage4HeroMarkScaleAnim!.value; 
+            
             Widget heroMarkWidget = (_winAnimationPlayer == 'X')
                 ? CustomPaint(painter: XPainter(progress: 1.0), size: Size(cellWidth, cellHeight))
                 : CustomPaint(painter: OPainter(progress: 1.0), size: Size(cellWidth, cellHeight));
             
-            stage3Elements.add(
+            stage3_4Elements.add(
               Positioned(
-                left: boardCenter.dx - (cellWidth / 2 * heroScale),
-                top: boardCenter.dy - (cellHeight / 2 * heroScale),
-                width: cellWidth * heroScale,
-                height: cellHeight * heroScale,
-                child: Opacity(opacity: 1.0, child: heroMarkWidget), 
+                left: boardCenter.dx - (cellWidth / 2 * heroAnimatedScale),
+                top: boardCenter.dy - (cellHeight / 2 * heroAnimatedScale),
+                width: cellWidth * heroAnimatedScale,
+                height: cellHeight * heroAnimatedScale,
+                child: Opacity(
+                  opacity: 1.0, // Hero mark remains fully opaque during its growth in Stage 4
+                  child: heroMarkWidget,
+                ),
               )
             );
           }
-          return AspectRatio(aspectRatio: 1.0, child: Stack(children: stage3Elements));
+          return AspectRatio(aspectRatio: 1.0, child: Stack(children: stage3_4Elements));
         } else if (_isWinAnimationPlaying && _winningLineCoords != null && _winningLineAnimation != null && _winAnimationPlayer != null) {
           return AspectRatio(
             aspectRatio: 1.0,
