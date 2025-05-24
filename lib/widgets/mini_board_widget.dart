@@ -366,7 +366,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
     return [extendedStart, extendedEnd];
   }
 
-  void _attemptMoveOnCell(int cellIndexInMiniBoard) {
+  Future<void> _attemptMoveOnCell(int cellIndexInMiniBoard) async {
       final gameState = Provider.of<GameState>(context, listen: false);
       if (gameState.getCellState(widget.miniBoardIndex, cellIndexInMiniBoard) != null) {
           _shakeAnimationController.reset();

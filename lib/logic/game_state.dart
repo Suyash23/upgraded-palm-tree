@@ -45,43 +45,8 @@ class GameState extends ChangeNotifier {
   }
 
   // Private helper method to apply a validated move
-  void _applyValidatedMove(int miniBoardIdx, int cellIdx) {
-    String playerMakingThisMove = currentPlayer;
-    miniBoardStates[miniBoardIdx][cellIdx] = playerMakingThisMove;
-
-    if (superBoardState[miniBoardIdx] == null) {
-      String? miniBoardResult = _checkMiniBoardWinner(miniBoardIdx);
-      if (miniBoardResult != null) {
-        superBoardState[miniBoardIdx] = miniBoardResult;
-        if (kDebugMode) { print("Mini-board $miniBoardIdx result: $miniBoardResult by $playerMakingThisMove"); }
-
-        String? gameResult = _checkOverallWinner();
-        if (gameResult != null) {
-          overallWinner = gameResult;
-          gameActive = false;
-          if (kDebugMode) { print("Overall game result: $overallWinner. Game over."); }
-        }
-      }
-    }
-
-    if (gameActive) {
-      currentPlayer = (playerMakingThisMove == 'X') ? 'O' : 'X'; // Switch to next player
-      if (superBoardState[cellIdx] == null) {
-        activeMiniBoardIndex = cellIdx;
-      } else {
-        activeMiniBoardIndex = null;
-      }
-    } else {
-      activeMiniBoardIndex = null; // Game ended
-    }
-
-    if (kDebugMode) {
-      print("Move applied by $playerMakingThisMove in board $miniBoardIdx, cell $cellIdx. Next player: $currentPlayer. Next forced: $activeMiniBoardIndex. SuperBoard: $superBoardState. Overall: $overallWinner");
-    }
-    // notifyListeners() will be called by the public makeMove method
-  }
-
-  // Private helper method to apply a validated move
+  // The duplicated version (taking 2 arguments) has been removed.
+  // This is the correct version (taking 3 arguments).
   void _applyValidatedMove(int miniBoardIdx, int cellIdx, String player) {
     // String playerMakingThisMove = currentPlayer; // Changed: Use passed player
     miniBoardStates[miniBoardIdx][cellIdx] = player;
