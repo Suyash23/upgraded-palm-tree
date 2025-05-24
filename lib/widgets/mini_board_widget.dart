@@ -62,6 +62,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
   List<Animation<double>> _stage3NonWinningMarkScaleAnims = [];
   List<int> _nonWinningCellIndicesStage3 = []; 
   bool _isStage3_4WinClearingAndGrowing = false; 
+  Animation<double>? _stage4HeroMarkScaleAnim; // Declare the missing animation field
 
   bool _pendingWinAnimationSetup = false; 
 
@@ -373,11 +374,18 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
           return;
       }
 
-      bool moveMade = gameState.makeMove(widget.miniBoardIndex, cellIndexInMiniBoard);
-      if (!moveMade && mounted) { 
-        _shakeAnimationController.reset();
-        _shakeAnimationController.forward();
-      }
+      // Changed from makeMove to processPlayerMove. 
+      // processPlayerMove is async void and handles notifyListeners itself.
+      // The 'moveMade' boolean is no longer returned.
+      // Shake animation for invalid (already taken) moves is handled by the check above.
+      // If a move is valid, processPlayerMove will update the state and trigger rebuilds.
+      await gameState.processPlayerMove(widget.miniBoardIndex, cellIndexInMiniBoard);
+
+      // The following block is removed as moveMade is no longer available.
+      // if (!moveMade && mounted) { 
+      //   _shakeAnimationController.reset();
+      //   _shakeAnimationController.forward();
+      // }
     }
 
   @override
