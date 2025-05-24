@@ -485,9 +485,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final Size boardSize = constraints.biggest;
-
-        final Size boardSize = constraints.biggest;
+        final Size boardSize = constraints.biggest; // Keep only one declaration
 
         if (_pendingWinAnimationSetup && widget.boardStatus != null && widget.boardStatus != 'DRAW') {
           WidgetsBinding.instance.addPostFrameCallback((_) {
