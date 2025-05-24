@@ -419,27 +419,18 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
   Future<void> _attemptMoveOnCell(int cellIndexInMiniBoard) async {
       final gameState = Provider.of<GameState>(context, listen: false);
       if (gameState.getCellState(widget.miniBoardIndex, cellIndexInMiniBoard) != null) {
-    ];
-    String? winner;
-    List<int>? patternIndices;
-
-    for (var pattern in winPatterns) {
-      String? p1 = boardCells[pattern[0]];
-      String? p2 = boardCells[pattern[1]];
-      String? p3 = boardCells[pattern[2]];
-      if (p1 != null && p1 == p2 && p1 == p3) {
-        winner = p1;
-        patternIndices = pattern;
-        break;
-      }
-    }
-
-    if (winner == null || patternIndices == null) return null;
-    // _winAnimationPlayer = winner; // Set by didUpdateWidget
+          // Content of this if-block was:
+          // _shakeAnimationController.reset();
+          // _shakeAnimationController.forward();
+          // return;
+          // The misplaced code was inserted BEFORE these lines.
+          // Corrected:
           _shakeAnimationController.reset();
           _shakeAnimationController.forward();
           return;
       }
+
+      // The misplaced block that started with `];` and win-checking logic has been removed from here.
 
       bool moveMade = await gameState.makeMove(widget.miniBoardIndex, cellIndexInMiniBoard);
       if (!moveMade && mounted) {
