@@ -11,15 +11,17 @@ class SuperWinningLinePainter extends CustomPainter {
     required this.progress,
   });
 
+  // Reusable Paint object
+  final Paint _linePaint = Paint()
+    ..strokeWidth = 15.0 // Thicker line
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
+
   @override
   void paint(Canvas canvas, Size size) {
     if (lineCoords == null || lineCoords!.isEmpty || winner == null || progress == 0) return;
 
-    final paint = Paint()
-      ..color = (winner == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE)
-      ..strokeWidth = 15.0 // Thicker line
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    _linePaint.color = (winner == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE);
 
     Offset startPoint = lineCoords![0];
     Offset endPoint = lineCoords![1];
@@ -30,7 +32,7 @@ class SuperWinningLinePainter extends CustomPainter {
       startPoint.dx + (endPoint.dx - startPoint.dx) * progress,
       startPoint.dy + (endPoint.dy - startPoint.dy) * progress,
     );
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path, _linePaint);
   }
 
   @override

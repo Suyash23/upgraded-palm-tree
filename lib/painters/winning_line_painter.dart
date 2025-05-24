@@ -11,15 +11,17 @@ class WinningLinePainter extends CustomPainter {
     required this.progress,
   });
 
+  // Reusable Paint object
+  final Paint _linePaint = Paint()
+    ..strokeWidth = 10.0 // As per spec
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
+
   @override
   void paint(Canvas canvas, Size size) {
     if (lineCoords.isEmpty || progress == 0) return;
 
-    final paint = Paint()
-      ..color = (player == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE) // Red for X, Blue for O
-      ..strokeWidth = 10.0 // As per spec
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+    _linePaint.color = (player == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE); // Red for X, Blue for O
 
     Offset startPoint = lineCoords[0];
     Offset endPoint = lineCoords[1];
@@ -31,7 +33,7 @@ class WinningLinePainter extends CustomPainter {
       startPoint.dx + (endPoint.dx - startPoint.dx) * progress,
       startPoint.dy + (endPoint.dy - startPoint.dy) * progress,
     );
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path, _linePaint);
   }
 
   @override

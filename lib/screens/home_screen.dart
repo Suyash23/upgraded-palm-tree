@@ -53,36 +53,9 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
 
   @override
   Widget build(BuildContext context) {
-    final gameState = Provider.of<GameState>(context);
+    // gameStateForActions can be used for non-reactive parts or passed to event handlers.
+    final gameStateForActions = Provider.of<GameState>(context, listen: false);
     
-    String statusText;
-    if (gameState.isAITurnInProgress) { // Check this first
-      statusText = "AI is thinking...";
-    } else if (!gameState.gameActive && gameState.overallWinner != null) {
-      switch (gameState.overallWinner) {
-        case 'X': statusText = "PLAYER X WINS THE SUPER GAME! 🎉"; break;
-        case 'O': statusText = "PLAYER O WINS THE SUPER GAME! 🎉"; break;
-        case 'DRAW': statusText = "SUPER GAME IS A DRAW! 🤝"; break;
-        default: statusText = "Game Over!"; 
-      }
-    } else { // Game is ongoing
-      String player = gameState.currentPlayer;
-      String boardGuidance;
-      if (gameState.activeMiniBoardIndex != null) {
-        int displayBoardIndex = gameState.activeMiniBoardIndex! + 1; 
-        boardGuidance = "Play in Board #$displayBoardIndex.";
-      } else {
-        boardGuidance = "Play in ANY available (yellow-lined) board.";
-      }
-      statusText = "Player $player's turn. $boardGuidance";
-      if (gameState.currentGameMode == GameMode.humanVsAI && player == 'O' && gameState.gameActive) {
-        // This case should ideally be caught by isAITurnInProgress,
-        // but as a fallback or if AI moves instantly (e.g. error or no delay).
-        // Ensure game is active to prevent showing "AI is thinking" after game over.
-        statusText = "AI is thinking..."; 
-      }
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('Super Tic Tac Toe')),
       body: Center(
@@ -94,18 +67,49 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
               height: 400,
               padding: const EdgeInsets.all(8.0),
               color: Colors.grey[200],
-              child: SuperBoardWidget(key: _superBoardKey), // Use the key here
+              child: SuperBoardWidget(key: _superBoardKey),
             ),
             const SizedBox(height: 20),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(statusText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+              child: Selector<GameState, String>(
+                selector: (_, gameState) {
+                  // This logic constructs the statusText based on various GameState properties.
+                  // The Selector will only rebuild if the output of this function (the statusText string) changes.
+                  if (gameState.isAITurnInProgress) {
+                    return "AI is thinking...";
+                  } else if (!gameState.gameActive && gameState.overallWinner != null) {
+                    switch (gameState.overallWinner) {
+                      case 'X': return "PLAYER X WINS THE SUPER GAME! 🎉";
+                      case 'O': return "PLAYER O WINS THE SUPER GAME! 🎉";
+                      case 'DRAW': return "SUPER GAME IS A DRAW! 🤝";
+                      default: return "Game Over!";
+                    }
+                  } else {
+                    String player = gameState.currentPlayer;
+                    String boardGuidance;
+                    if (gameState.activeMiniBoardIndex != null) {
+                      int displayBoardIndex = gameState.activeMiniBoardIndex! + 1;
+                      boardGuidance = "Play in Board #$displayBoardIndex.";
+                    } else {
+                      boardGuidance = "Play in ANY available (yellow-lined) board.";
+                    }
+                    // Check for AI turn again for humanVsAI mode, even if not caught by isAITurnInProgress
+                    if (gameState.currentGameMode == GameMode.humanVsAI && player == 'O' && gameState.gameActive) {
+                       return "AI is thinking...";
+                    }
+                    return "Player $player's turn. $boardGuidance";
+                  }
+                },
+                builder: (context, statusText, child) {
+                  return Text(statusText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500), textAlign: TextAlign.center);
+                },
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // When user clicks reset, reset with the current game mode.
-                _resetGame(gameState);
+                _resetGame(gameStateForActions); // Pass the non-listening gameState
               },
               style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
               child: const Text('Reset Super Game', style: TextStyle(fontSize: 16)),

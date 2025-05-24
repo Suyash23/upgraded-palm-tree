@@ -4,15 +4,17 @@ class MiniGridPainter extends CustomPainter {
   final bool isPlayable;
   final double progress; // For animation later, 0.0 to 1.0
 
-  MiniGridPainter({this.isPlayable = false, this.progress = 1.0}); // Default to fully drawn
+  MiniGridPainter({this.isPlayable = false, this.progress = 1.0});
+
+  // Reusable Paint object
+  final Paint _gridPaint = Paint()
+    ..strokeWidth = 3.0
+    ..style = PaintingStyle.stroke
+    ..strokeCap = StrokeCap.round;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = isPlayable ? const Color(0xFFDAA520) : const Color(0xFF007bff) // Dark yellow or Blue
-      ..strokeWidth = 3.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round; // Optional
+    _gridPaint.color = isPlayable ? const Color(0xFFDAA520) : const Color(0xFF007bff); // Dark yellow or Blue
 
     if (progress == 0) return;
 
@@ -25,11 +27,11 @@ class MiniGridPainter extends CustomPainter {
       canvas.drawLine(
           Offset(x, size.height / 2),
           Offset(x, size.height / 2 - (size.height / 2 * progress)),
-          paint);
+          _gridPaint);
       canvas.drawLine(
           Offset(x, size.height / 2),
           Offset(x, size.height / 2 + (size.height / 2 * progress)),
-          paint);
+          _gridPaint);
     }
 
     // Horizontal lines - draw from center outwards
@@ -38,11 +40,11 @@ class MiniGridPainter extends CustomPainter {
       canvas.drawLine(
           Offset(size.width / 2, y),
           Offset(size.width / 2 - (size.width / 2 * progress), y),
-          paint);
+          _gridPaint);
       canvas.drawLine(
           Offset(size.width / 2, y),
           Offset(size.width / 2 + (size.width / 2 * progress), y),
-          paint);
+          _gridPaint);
     }
   }
 

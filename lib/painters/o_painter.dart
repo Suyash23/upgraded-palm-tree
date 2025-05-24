@@ -4,15 +4,16 @@ import 'dart:math' as math;
 class OPainter extends CustomPainter {
   final double progress; // For animation, 0.0 to 1.0
 
-  OPainter({this.progress = 1.0}); // Default to fully drawn
+  OPainter({this.progress = 1.0});
+
+  // Static final Paint object as its properties are constant
+  static final Paint _oPaint = Paint()
+    ..color = const Color(0xFF209CEE) // Blue
+    ..strokeWidth = 8.0
+    ..style = PaintingStyle.stroke;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF209CEE) // Blue
-      ..strokeWidth = 8.0
-      ..style = PaintingStyle.stroke;
-
     // Define a padding factor and calculate radius
     double padding = size.width * 0.2; // 20% padding
     double radius = (math.min(size.width, size.height) - 2 * padding) / 2;
@@ -21,7 +22,7 @@ class OPainter extends CustomPainter {
     // For animation: draw the circle partially
     // The sweepAngle is 2 * pi * progress
     Rect rect = Rect.fromCircle(center: center, radius: radius);
-    canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * progress, false, paint);
+    canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * progress, false, _oPaint);
   }
 
   @override
