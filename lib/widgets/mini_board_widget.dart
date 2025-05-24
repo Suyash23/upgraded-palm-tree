@@ -412,13 +412,13 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
     }
   }
 
+  // Orphaned signature and deprecated method below were removed.
+  // List<Offset>? _calculateWinningLineCoords(List<String?> boardCells, Size boardSize) { // REMOVED ORPHANED LINE
+  // List<Offset>? _calculateWinningLineCoords_old(List<String?> boardCells, Size boardSize) { ... } // REMOVED METHOD BLOCK
 
-  List<Offset>? _calculateWinningLineCoords(List<String?> boardCells, Size boardSize) {
-  // Kept for now, but its direct usage for win animation start is replaced by _setupWinAnimationsAndStart
-  // It's now part of _calculateWinningLineData
-  List<Offset>? _calculateWinningLineCoords_old(List<String?> boardCells, Size boardSize) {
-    const List<List<int>> winPatterns = [
-      [0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]
+  Future<void> _attemptMoveOnCell(int cellIndexInMiniBoard) async {
+      final gameState = Provider.of<GameState>(context, listen: false);
+      if (gameState.getCellState(widget.miniBoardIndex, cellIndexInMiniBoard) != null) {
     ];
     String? winner;
     List<int>? patternIndices;
@@ -436,41 +436,12 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
 
     if (winner == null || patternIndices == null) return null;
     // _winAnimationPlayer = winner; // Set by didUpdateWidget
-    // _winningCellIndices = List<int>.from(patternIndices); // Set by _calculateWinningLineData
-
-    double cellWidth = boardSize.width / 3;
-    double cellHeight = boardSize.height / 3;
-
-    Offset getCellCenter(int index) {
-      int row = index ~/ 3;
-      int col = index % 3;
-      return Offset(col * cellWidth + cellWidth / 2, row * cellHeight + cellHeight / 2);
-    }
-
-    double extension = (35 / 300) * boardSize.width;
-    Offset startCellCenter = getCellCenter(patternIndices[0]);
-    Offset endCellCenter = getCellCenter(patternIndices[2]);
-    
-    Offset lineDirection = endCellCenter - startCellCenter;
-    double distance = lineDirection.distance;
-    if (distance == 0) return null; 
-    lineDirection = lineDirection.scale(1 / distance, 1 / distance); 
-    
-    Offset extendedStart = startCellCenter - lineDirection * extension;
-    Offset extendedEnd = endCellCenter + lineDirection * extension;
-    
-    return [extendedStart, extendedEnd];
-  }
-
-  void _attemptMoveOnCell(int cellIndexInMiniBoard) {
-      final gameState = Provider.of<GameState>(context, listen: false);
-      if (gameState.getCellState(widget.miniBoardIndex, cellIndexInMiniBoard) != null) {
           _shakeAnimationController.reset();
           _shakeAnimationController.forward();
           return;
       }
 
-      bool moveMade = gameState.makeMove(widget.miniBoardIndex, cellIndexInMiniBoard);
+      bool moveMade = await gameState.makeMove(widget.miniBoardIndex, cellIndexInMiniBoard);
       if (!moveMade && mounted) {
         _shakeAnimationController.reset();
         _shakeAnimationController.forward();
