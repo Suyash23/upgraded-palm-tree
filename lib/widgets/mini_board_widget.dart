@@ -98,7 +98,9 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
     _shakeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
-    );
+    )..addListener(() { // Chained using cascade operator
+      setState(() {});
+    });
     _shakeAnimation = TweenSequence<Offset>([
       TweenSequenceItem(tween: Tween(begin: Offset.zero, end: const Offset(-0.10, 0.0)), weight: 1), // Changed
       TweenSequenceItem(tween: Tween(begin: const Offset(-0.10, 0.0), end: const Offset(0.10, 0.0)), weight: 2), // Changed
