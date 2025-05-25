@@ -1,5 +1,6 @@
 // In lib/logic/ai_player.dart
 import 'dart:math';
+import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'game_state.dart'; // Assuming GameState and GameMode are here
 import 'ai_move.dart';    // Import the AIMove class
 
@@ -7,6 +8,11 @@ class AIPlayer {
   final Random _random = Random(); // Made final as it's initialized once
 
   AIMove? getRandomMove(GameState gameState) {
+    // Print the selected AI difficulty
+    if (kDebugMode) {
+      print("AIPlayer making move. Selected difficulty: ${gameState.selectedAIDifficulty}");
+    }
+
     if (!gameState.gameActive || gameState.currentPlayer == 'X') { // Assuming AI is 'O'
       return null; // Not AI's turn or game is over
     }

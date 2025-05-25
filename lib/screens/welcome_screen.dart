@@ -53,11 +53,8 @@ class WelcomeScreen extends StatelessWidget {
                 textStyle: const TextStyle(fontSize: 18),
               ),
               onPressed: () {
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/game',
-                  arguments: GameMode.humanVsAI,
-                );
+                // Setting GameMode and AIDifficulty will now be handled by DifficultyScreen
+                Navigator.of(context).pushNamed('/difficulty');
               },
               child: const Text('Play vs AI'),
             ),

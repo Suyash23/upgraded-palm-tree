@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart'; // Import WelcomeScreen
+import 'screens/difficulty_screen.dart'; // Import DifficultyScreen
 import 'logic/game_state.dart'; 
 
 void main() {
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const WelcomeScreen(), // WelcomeScreen is home
         '/game': (context) => const HomeScreen(),  // Named route for HomeScreen
+        '/difficulty': (context) => const DifficultyScreen(), // New route for DifficultyScreen
       },
       // home: const WelcomeScreen(), // Set WelcomeScreen as home if not using initialRoute
     );

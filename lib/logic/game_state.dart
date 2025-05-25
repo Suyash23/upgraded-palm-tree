@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart'; // Required for ChangeNotifier
 import 'ai_player.dart'; 
 import 'ai_move.dart';   
+import 'ai_difficulty.dart'; // Import the new enum
 
 enum GameMode {
   humanVsHuman,
@@ -16,10 +17,12 @@ class GameState extends ChangeNotifier {
   List<String?> superBoardState; 
   String? overallWinner; 
   GameMode currentGameMode; 
+  AIDifficulty selectedAIDifficulty = AIDifficulty.medium; // New field for AI difficulty
   bool isAITurnInProgress = false; // New property
 
   GameState()
       : miniBoardStates = List.generate(9, (_) => List.generate(9, (_) => null)),
+        selectedAIDifficulty = AIDifficulty.medium, // Initialize in constructor
         superBoardState = List.generate(9, (_) => null), 
         currentPlayer = 'X',
         activeMiniBoardIndex = null, 
@@ -37,11 +40,21 @@ class GameState extends ChangeNotifier {
     overallWinner = null; 
     isAITurnInProgress = false; // Reset this flag
     // currentGameMode is NOT reset here
+    // selectedAIDifficulty is NOT reset here
     notifyListeners(); 
   }
 
   void setGameMode(GameMode mode) {
     currentGameMode = mode;
+    // Consider if resetting the game or SuperBoardKey is needed when game mode changes
+    // during an active game. For now, just setting the mode.
+  }
+
+  void setAIDifficulty(AIDifficulty difficulty) {
+    selectedAIDifficulty = difficulty;
+    // Optional: notify if UI needs to react directly to this change.
+    // Included for now as per subtask instructions.
+    notifyListeners();
   }
 
   // Private helper method to apply a validated move
