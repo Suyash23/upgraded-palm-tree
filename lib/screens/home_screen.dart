@@ -89,6 +89,33 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Note: The original subtask mentioned calling GameState's resetGame.
+                      // However, the existing _resetGame method in this file
+                      // also handles resetting the _superBoardKey, which is crucial for
+                      // re-rendering the SuperBoardWidget correctly after a reset.
+                      // So, we should call this local _resetGame.
+                      // It internally calls gameState.resetGame().
+                      _resetGame(Provider.of<GameState>(context, listen: false));
+                    },
+                    child: const Text("Reset Game"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
+                    },
+                    child: const Text("Go to Home"),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 15), // Spacing before the SuperBoard
             Container(
               width: 400,
               height: 400,
@@ -101,16 +128,9 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(statusText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // When user clicks reset, reset with the current game mode.
-                _resetGame(gameState);
-              },
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15)),
-              child: const Text('Reset Super Game', style: TextStyle(fontSize: 16)),
-            ),
-            const SizedBox(height: 20),
+            // const SizedBox(height: 20), // Removed SizedBox above button
+            // ElevatedButton(...) // Removed Reset Button
+            // const SizedBox(height: 20), // Removed SizedBox below button
           ],
         ),
       ),
