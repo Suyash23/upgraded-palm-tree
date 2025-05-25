@@ -439,6 +439,15 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
               if (mounted) setState(() { _pendingWinAnimationSetup = false; });
             }
           });
+          // Render a basic grid or empty container while win animation setup is pending
+          // to prevent the flash of the final large X/O.
+          return AspectRatio(
+            aspectRatio: 1.0,
+            child: CustomPaint(
+              painter: MiniGridPainter(isPlayable: false, progress: 1.0), // Basic grid
+              size: Size.infinite,
+            ),
+          );
         }
         
         if (_isStage3_4WinClearingAndGrowing) {
