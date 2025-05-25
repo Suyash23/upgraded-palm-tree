@@ -78,7 +78,7 @@ class _CellWidgetState extends State<CellWidget> with SingleTickerProviderStateM
       onExit: (_) { if (_isHovering) setState(() => _isHovering = false); },
       cursor: widget.isPlayableCell ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
-        onTap: widget.isPlayableCell ? widget.onTap : null,
+        onTap: widget.onTap, // Changed to be unconditional
         child: Container(
           decoration: BoxDecoration(
             color: _isHovering && widget.isPlayableCell ? Colors.yellow[100] : Colors.transparent,
