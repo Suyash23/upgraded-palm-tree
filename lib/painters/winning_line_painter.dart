@@ -17,7 +17,7 @@ class WinningLinePainter extends CustomPainter {
 
     final paint = Paint()
       ..color = (player == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE) // Red for X, Blue for O
-      ..strokeWidth = 10.0 // As per spec
+      ..strokeWidth = 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 

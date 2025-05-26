@@ -17,7 +17,7 @@ class SuperWinningLinePainter extends CustomPainter {
 
     final paint = Paint()
       ..color = (winner == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE)
-      ..strokeWidth = 15.0 // Thicker line
+      ..strokeWidth = 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
