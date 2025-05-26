@@ -190,7 +190,7 @@ class GameState extends ChangeNotifier {
       return;
     }
 
-    AIMove? aiMove = _aiPlayer.getRandomMove(this);
+    AIMove? aiMove = _aiPlayer.getAIMove(this); // Corrected method call
 
     if (aiMove != null) {
       // _applyMoveInternal will call notifyListeners upon successful move.
