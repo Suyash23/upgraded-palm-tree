@@ -145,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
               width: 400,
               height: 400,
               padding: const EdgeInsets.all(8.0),
-              color: scheme.miniGridColor.withOpacity(0.1), // New color from scheme
+              color: scheme.scaffoldBackground, // New logic
               child: SuperBoardWidget(key: _superBoardKey), // Use the key here
             ),
             const SizedBox(height: 20),

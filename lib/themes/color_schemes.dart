@@ -35,7 +35,7 @@ class AppColorScheme {
 
 class AppColorSchemes {
   static const AppColorScheme defaultScheme = AppColorScheme(
-    scaffoldBackground: Colors.white, // Standard light theme background
+    scaffoldBackground: Color(0xFFFEF8FF),
     appBarBackground: Colors.blue, // Standard Flutter blue
     primaryText: Colors.black,
     secondaryText: Color(0xFF555555), // Dark grey
