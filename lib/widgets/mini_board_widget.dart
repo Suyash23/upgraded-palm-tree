@@ -1,3 +1,4 @@
+import 'dart:async'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../painters/mini_grid_painter.dart';
@@ -65,10 +66,15 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
   Animation<double>? _stage4HeroMarkScaleAnim; // Declare the missing animation field
 
   bool _pendingWinAnimationSetup = false; 
+  Completer<void>? _winAnimationCompleter; // Added Completer
+
+  // Added getter for the Future
+  Future<void>? get winAnimationCompleteFuture => _winAnimationCompleter?.future;
 
   @override
   void initState() {
     super.initState();
+    _winAnimationCompleter = Completer<void>(); // Initialize Completer
     _miniGridController = AnimationController(
       duration: const Duration(milliseconds: 600), 
       vsync: this,
@@ -123,7 +129,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
       _miniGridController.forward();
     }
 
-    if (widget.boardStatus != null && oldWidget.boardStatus == null) { 
+    if (widget.boardStatus != null && oldWidget.boardStatus == null) { // A win or draw just occurred
       if (widget.boardStatus == 'DRAW') {
         if (mounted) {
           _isDrawAnimationPlaying = true;
@@ -157,9 +163,32 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
             _stage3_4WinClearAndGrowController?.reset();
           });
         }
+      } else { // A win ('X' or 'O') just happened
+         if (mounted) {
+          if (_winAnimationCompleter!.isCompleted) {
+            _winAnimationCompleter = Completer<void>(); // Re-initialize if completed
+          }
+          _winAnimationPlayer = widget.boardStatus; 
+          setState(() {
+            _pendingWinAnimationSetup = true; 
+            _isWinAnimationPlaying = false; 
+            _isStage2WinConverging = false; 
+            _isStage3_4WinClearingAndGrowing = false;
+            _winAnimationController.reset(); 
+            _stage2WinConvergeController?.reset();
+            _stage3_4WinClearAndGrowController?.reset();
+          });
+        }
       }
     } else if (widget.boardStatus == null && oldWidget.boardStatus != null) {
       // Board was reset
+      if (_winAnimationCompleter != null && !_winAnimationCompleter!.isCompleted) {
+        // If a win animation was in progress but didn't complete,
+        // and the board is reset, we might want to cancel it or signal an error.
+        // For now, we just create a new one.
+      }
+      _winAnimationCompleter = Completer<void>(); // Always re-initialize on reset
+
       _winAnimationController.reset();
       _drawAnimationController.reset();
       _stage2WinConvergeController?.reset(); 
@@ -315,9 +344,12 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
       _stage3_4WinClearAndGrowController!.addListener(() { setState(() {}); });
       _stage3_4WinClearAndGrowController!.addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          if (mounted) setState(() { 
-            _isStage3_4WinClearingAndGrowing = false; 
-          });
+          if (mounted) {
+            setState(() { 
+              _isStage3_4WinClearingAndGrowing = false; 
+            });
+            _winAnimationCompleter?.complete(); // Complete the completer here
+          }
         }
       });
       _stage3_4WinClearAndGrowController!.forward();
