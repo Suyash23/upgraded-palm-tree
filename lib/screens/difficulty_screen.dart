@@ -50,10 +50,17 @@ class _DifficultyScreenState extends State<DifficultyScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch, // Using stretch for button width as in example
           children: <Widget>[
-            Text(
-              details.emoji, // Use dynamic emoji
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 100),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: Text( // This is the child Text widget for the emoji
+                details.emoji,
+                key: ValueKey<String>(details.emoji), // Key based on the emoji string
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 100),
+              ),
             ),
             const SizedBox(height: 20),
             Text(
@@ -62,17 +69,37 @@ class _DifficultyScreenState extends State<DifficultyScreen> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
-            Slider(
-              value: _sliderValue,
-              min: 0.0,
-              max: 3.0,
-              divisions: 3,
-              label: details.name, // Use dynamic name for label
-              onChanged: (double newValue) {
-                setState(() {
-                  _sliderValue = newValue;
-                });
-              },
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 8.0,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12.0),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 20.0),
+                // Optional: customize colors if needed
+                // activeTrackColor: Theme.of(context).colorScheme.primary,
+                // inactiveTrackColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                // thumbColor: Theme.of(context).colorScheme.primary,
+              ),
+              child: Row(
+                children: <Widget>[
+                  const Spacer(flex: 1),
+                  Expanded(
+                    flex: 3, // Using flex:3 as per example, adjust if needed
+                    child: Slider(
+                      value: _sliderValue,
+                      min: 0.0,
+                      max: 3.0,
+                      divisions: 3,
+                      label: details.name, // Use dynamic name for label
+                      onChanged: (double newValue) {
+                        setState(() {
+                          _sliderValue = newValue;
+                        });
+                      },
+                    ),
+                  ),
+                  const Spacer(flex: 1),
+                ],
+              ),
             ),
             const SizedBox(height: 30),
             ElevatedButton(
