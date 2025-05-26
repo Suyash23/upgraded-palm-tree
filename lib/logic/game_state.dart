@@ -175,8 +175,41 @@ void applyMoveForSimulation(int miniBoardIdx, int cellIdx, String player) {
     }
     // --- End: Initial Validation ---
 
-  // Apply the player's move (using the original _applyValidatedMove for actual game moves)
-    _applyValidatedMove(miniBoardIdx, cellIdx, player);
+  // Apply the move
+  miniBoardStates[miniBoardIdx][cellIdx] = player;
+
+  // Check if the mini-board where the move was made has a winner or is a draw
+  if (superBoardState[miniBoardIdx] == null) { // Only check if not already decided
+      String? miniBoardResult = _checkMiniBoardWinner(miniBoardIdx);
+      if (miniBoardResult != null) {
+          superBoardState[miniBoardIdx] = miniBoardResult;
+          if (kDebugMode) { print("_applyMoveInternal: Mini-board $miniBoardIdx result: $miniBoardResult by $player"); }
+
+          // Check for overall game winner after this mini-board is decided
+          String? gameResult = _checkOverallWinner();
+          if (gameResult != null) {
+              overallWinner = gameResult;
+              gameActive = false; // Game ends
+              if (kDebugMode) { print("_applyMoveInternal: Overall game result: $overallWinner. Game over."); }
+          }
+      }
+  }
+
+  // If the game is still active, switch player and determine next active mini-board
+  if (gameActive) {
+      currentPlayer = (player == 'X') ? 'O' : 'X';
+
+      // Determine next active mini-board:
+      // If the mini-board corresponding to the cell just played in (cellIdx) is not yet won/drawn,
+      // it becomes the activeMiniBoardIndex. Otherwise, the next player can play in any undecided mini-board.
+      if (superBoardState[cellIdx] == null) {
+          activeMiniBoardIndex = cellIdx;
+      } else {
+          activeMiniBoardIndex = null; // Player can choose any non-decided board
+      }
+  } else {
+      activeMiniBoardIndex = null; // Game ended, no next active board
+  }
 
     // AI turn handling logic has been removed from here.
 
