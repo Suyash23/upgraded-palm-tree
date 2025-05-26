@@ -177,6 +177,10 @@ class GameState extends ChangeNotifier {
   }
 
   Future<void> _triggerAIMove() async {
+    if (kDebugMode) {
+      print("[GameState._triggerAIMove] Entered. Current player: $currentPlayer, Game active: $gameActive, Mode: $currentGameMode");
+    }
+
     // Safeguard: Ensure it's actually AI's turn.
     if (currentPlayer != 'O' || !gameActive || currentGameMode != GameMode.humanVsAI) {
       if (kDebugMode) {
@@ -191,6 +195,13 @@ class GameState extends ChangeNotifier {
     }
 
     AIMove? aiMove = _aiPlayer.getAIMove(this); // Corrected method call
+    if (kDebugMode) {
+      if (aiMove != null) {
+        print("[GameState._triggerAIMove] Received move from AIPlayer: ${aiMove.miniBoardIndex}-${aiMove.cellIndex}");
+      } else {
+        print("[GameState._triggerAIMove] AIPlayer returned no move (null).");
+      }
+    }
 
     if (aiMove != null) {
       // _applyMoveInternal will call notifyListeners upon successful move.

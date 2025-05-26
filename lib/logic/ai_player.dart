@@ -11,7 +11,8 @@ class AIPlayer {
   AIMove? getAIMove(GameState gameState) {
     // Debug print for selected difficulty
     if (kDebugMode) {
-      print("AIPlayer:getAIMove called. Selected difficulty: ${gameState.selectedAIDifficulty}");
+      // print("AIPlayer:getAIMove called. Selected difficulty: ${gameState.selectedAIDifficulty}"); // Original simpler print
+      print("[AIPlayer.getAIMove] Entered. Difficulty: ${gameState.selectedAIDifficulty}, Current Player: ${gameState.currentPlayer}");
     }
 
     switch (gameState.selectedAIDifficulty) {
@@ -34,14 +35,26 @@ class AIPlayer {
   // --- STUB Private Methods ---
 
   AIMove? _getEasyMove(GameState gameState) {
+    if (kDebugMode) {
+      print("[AIPlayer._getEasyMove] Entered.");
+    }
     List<AIMove> validMoves = _getAllValidMoves(gameState);
     if (validMoves.isEmpty) {
+      if (kDebugMode) {
+        print("[AIPlayer._getEasyMove] No valid moves to pick from.");
+      }
       return null;
+    }
+    if (kDebugMode) {
+      print("[AIPlayer._getEasyMove] About to pick a random move from ${validMoves.length} options.");
     }
     return validMoves[_random.nextInt(validMoves.length)];
   }
 
   AIMove? _getMediumMove(GameState gameState) {
+    if (kDebugMode) {
+      print("[AIPlayer._getMediumMove] Entered.");
+    }
     List<AIMove> validMoves = _getAllValidMoves(gameState);
     if (validMoves.isEmpty) return null;
 
@@ -51,37 +64,49 @@ class AIPlayer {
     // 1. Check for AI's winning move
     for (AIMove move in validMoves) {
       if (_checkPotentialWin(gameState.miniBoardStates[move.miniBoardIndex], move.cellIndex, aiPlayer)) {
-        // if (kDebugMode) print("Medium AI: Found winning move at ${move.miniBoardIndex}-${move.cellIndex}");
+        if (kDebugMode) {
+          print("[AIPlayer._getMediumMove] Found winning move for AI at ${move.miniBoardIndex}-${move.cellIndex}");
+        }
         return move;
       }
     }
 
     // 2. Block opponent's winning move
     for (AIMove move in validMoves) { // 'move' is a cell AI can play in
-      // Check if opponent could win by playing in this exact cell 'move.cellIndex' on this board 'move.miniBoardIndex'
       if (_checkPotentialWin(gameState.miniBoardStates[move.miniBoardIndex], move.cellIndex, opponentPlayer)) {
-        // if (kDebugMode) print("Medium AI: Blocking opponent's win at ${move.miniBoardIndex}-${move.cellIndex}");
+        if (kDebugMode) {
+          print("[AIPlayer._getMediumMove] Found blocking move for opponent at ${move.miniBoardIndex}-${move.cellIndex}");
+        }
         return move; // AI plays in the cell where opponent would have won
       }
     }
 
     // 3. Fallback to Random Move
-    // if (kDebugMode) print("Medium AI: No win or block, making random move.");
+    if (kDebugMode) {
+      print("[AIPlayer._getMediumMove] No win or block, resorting to random move from ${validMoves.length} options.");
+    }
     return validMoves[_random.nextInt(validMoves.length)];
   }
 
   AIMove? _getHardMove(GameState gameState) {
-    // print("_getHardMove called - delegating to Medium for now."); // Optional: keep for debugging if desired
+    if (kDebugMode) {
+      print("[AIPlayer._getHardMove] Entered, will delegate.");
+    }
     return _getMediumMove(gameState);
   }
 
   AIMove? _getUnfairMove(GameState gameState) {
-    // print("_getUnfairMove called - delegating to Hard (and then Medium) for now."); // Optional: keep for debugging
+    if (kDebugMode) {
+      print("[AIPlayer._getUnfairMove] Entered, will delegate.");
+    }
     return _getHardMove(gameState);
   }
 
   // Helper method to get all valid moves
   List<AIMove> _getAllValidMoves(GameState gameState) {
+    if (kDebugMode) {
+      print("[AIPlayer._getAllValidMoves] Entered. Game Active: ${gameState.gameActive}, Current Player: ${gameState.currentPlayer}, Active MiniBoard: ${gameState.activeMiniBoardIndex}");
+    }
     if (!gameState.gameActive || gameState.currentPlayer == 'X') { // Assuming AI is 'O'
         return []; // Not AI's turn or game is over
     }
@@ -112,6 +137,9 @@ class AIPlayer {
             }
         }
     }
+    if (kDebugMode) {
+      print("[AIPlayer._getAllValidMoves] Playable MiniBoard Indices: $playableMiniBoardIndices");
+    }
 
     if (playableMiniBoardIndices.isEmpty) {
         return []; 
@@ -127,6 +155,9 @@ class AIPlayer {
                 }
             }
         }
+    }
+    if (kDebugMode) {
+      print("[AIPlayer._getAllValidMoves] Found ${validMoves.length} valid moves.");
     }
     return validMoves;
   }
