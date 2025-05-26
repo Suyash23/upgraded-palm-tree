@@ -579,7 +579,7 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
             if (!isWinningCell) { 
               String? mark = gameState.getCellState(widget.miniBoardIndex, i);
               if (mark != null) {
-                int r = i ~/ 3; int c = cellIndex % 3;
+                int r = i ~/ 3; int c = i % 3;
                 convergingElements.add(Positioned(
                   left: c * cellWidth, top: r * cellHeight,
                   width: cellWidth, height: cellHeight,
