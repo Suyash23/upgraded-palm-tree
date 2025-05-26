@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Added import
-import '../logic/game_state.dart';      // Added import
+import 'package:provider/provider.dart'; 
+import 'package:flutter/foundation.dart'; // For kDebugMode
+import '../logic/game_state.dart';      
 import '../logic/ai_difficulty.dart';  // Added import
 
 // Helper class for difficulty details
@@ -108,6 +109,9 @@ class _DifficultyScreenState extends State<DifficultyScreen> {
                 final gameState = Provider.of<GameState>(context, listen: false);
 
                 // Set GameMode
+                if (kDebugMode) {
+                  print("[DifficultyScreen] Setting game mode to humanVsAI");
+                }
                 gameState.setGameMode(GameMode.humanVsAI);
 
                 // Convert _sliderValue to AIDifficulty enum and set it
@@ -130,6 +134,10 @@ class _DifficultyScreenState extends State<DifficultyScreen> {
                     selectedDifficulty = AIDifficulty.medium; // Default
                 }
                 gameState.setAIDifficulty(selectedDifficulty);
+
+                if (kDebugMode) {
+                  print("[DifficultyScreen] currentGameMode after set: ${gameState.currentGameMode}, selectedAIDifficulty: ${gameState.selectedAIDifficulty}");
+                }
 
                 // Navigate to the game screen
                 // Use pushReplacementNamed to prevent going back to difficulty screen from game screen

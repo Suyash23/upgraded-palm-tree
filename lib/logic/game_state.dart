@@ -32,6 +32,9 @@ class GameState extends ChangeNotifier {
         isAITurnInProgress = false; // Initialize
 
   void resetGame() {
+    if (kDebugMode) {
+      print("[GameState.resetGame] Mode before reset logic: $currentGameMode");
+    }
     miniBoardStates = List.generate(9, (_) => List.generate(9, (_) => null));
     superBoardState = List.generate(9, (_) => null); 
     currentPlayer = 'X';
@@ -42,9 +45,15 @@ class GameState extends ChangeNotifier {
     // currentGameMode is NOT reset here
     // selectedAIDifficulty is NOT reset here
     notifyListeners(); 
+    if (kDebugMode) {
+      print("[GameState.resetGame] Mode after reset logic: $currentGameMode");
+    }
   }
 
   void setGameMode(GameMode mode) {
+    if (kDebugMode) {
+      print("[GameState.setGameMode] Setting mode to $mode. Current mode was: $currentGameMode");
+    }
     currentGameMode = mode;
     // Consider if resetting the game or SuperBoardKey is needed when game mode changes
     // during an active game. For now, just setting the mode.

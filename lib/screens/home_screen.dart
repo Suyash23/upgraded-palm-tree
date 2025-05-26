@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart'; // For kDebugMode
 import '../logic/game_state.dart';
 import '../widgets/super_board_widget.dart';
 
@@ -53,29 +54,43 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
 
   @override
   Widget build(BuildContext context) {
-    final gameState = Provider.of<GameState>(context);
+    // final gameState = Provider.of<GameState>(context); // Original line
+    // For logging, access GameState without listening if only for this log.
+    // If other parts of build depend on it, listen: true is fine (or use Consumer).
+    final GameState gameState = Provider.of<GameState>(context, listen: false); // Changed to listen: false for logging
+    if (kDebugMode) {
+      print("[HomeScreen.build] Current game mode from GameState: ${gameState.currentGameMode}");
+    }
+    // If you need to listen for changes for UI updates, you'd typically use:
+    // final GameState gameStateForUI = Provider.of<GameState>(context);
+    // Or, if you modified the line above back to listen: true, that's also fine.
+    // For this task, the listen: false version is sufficient for the log.
+    // The original Provider.of<GameState>(context) (which implies listen: true)
+    // will be used for the actual UI building parts that follow.
+    final gameStateForUI = Provider.of<GameState>(context); // Re-get with listen: true for UI
     
     String statusText;
-    if (gameState.isAITurnInProgress) { // Check this first
+    // Use gameStateForUI for parts of the UI that need to react to changes
+    if (gameStateForUI.isAITurnInProgress) { // Check this first
       statusText = "AI is thinking...";
-    } else if (!gameState.gameActive && gameState.overallWinner != null) {
-      switch (gameState.overallWinner) {
+    } else if (!gameStateForUI.gameActive && gameStateForUI.overallWinner != null) {
+      switch (gameStateForUI.overallWinner) {
         case 'X': statusText = "PLAYER X WINS THE SUPER GAME! 🎉"; break;
         case 'O': statusText = "PLAYER O WINS THE SUPER GAME! 🎉"; break;
         case 'DRAW': statusText = "SUPER GAME IS A DRAW! 🤝"; break;
         default: statusText = "Game Over!"; 
       }
     } else { // Game is ongoing
-      String player = gameState.currentPlayer;
+      String player = gameStateForUI.currentPlayer;
       String boardGuidance;
-      if (gameState.activeMiniBoardIndex != null) {
-        int displayBoardIndex = gameState.activeMiniBoardIndex! + 1; 
+      if (gameStateForUI.activeMiniBoardIndex != null) {
+        int displayBoardIndex = gameStateForUI.activeMiniBoardIndex! + 1; 
         boardGuidance = "Play in Board #$displayBoardIndex.";
       } else {
         boardGuidance = "Play in ANY available (yellow-lined) board.";
       }
       statusText = "Player $player's turn. $boardGuidance";
-      if (gameState.currentGameMode == GameMode.humanVsAI && player == 'O' && gameState.gameActive) {
+      if (gameStateForUI.currentGameMode == GameMode.humanVsAI && player == 'O' && gameStateForUI.gameActive) {
         // This case should ideally be caught by isAITurnInProgress,
         // but as a fallback or if AI moves instantly (e.g. error or no delay).
         // Ensure game is active to prevent showing "AI is thinking" after game over.
@@ -102,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
                       // re-rendering the SuperBoardWidget correctly after a reset.
                       // So, we should call this local _resetGame.
                       // It internally calls gameState.resetGame().
-                      _resetGame(Provider.of<GameState>(context, listen: false));
+                      _resetGame(gameStateForUI); // Use gameStateForUI or a new Provider.of with listen:false
                     },
                     child: const Text("Reset Game"),
                   ),
