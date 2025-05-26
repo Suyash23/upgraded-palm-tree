@@ -23,10 +23,10 @@ class MiniBoardWidget extends StatefulWidget {
   });
 
   @override
-  State<MiniBoardWidget> createState() => _MiniBoardWidgetState();
+  MiniBoardWidgetState createState() => MiniBoardWidgetState();
 }
 
-class _MiniBoardWidgetState extends State<MiniBoardWidget>
+class MiniBoardWidgetState extends State<MiniBoardWidget>
     with TickerProviderStateMixin { 
   late AnimationController _miniGridController;
   late Animation<double> _miniGridAnimation;
@@ -148,20 +148,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
                // Keep the final state of draw animation (symbol visible)
                // setState(() { _isDrawAnimationPlaying = false; }); // Don't set to false
             }
-          });
-        }
-      } else { // A win ('X' or 'O') just happened
-         if (mounted) {
-          _winAnimationPlayer = widget.boardStatus; 
-          setState(() {
-            _pendingWinAnimationSetup = true; 
-            _isWinAnimationPlaying = false; 
-            _isStage2WinConverging = false; 
-            _isStage3_4WinClearingAndGrowing = false;
-            _winAnimationController.reset(); 
-            _stage2WinConvergeController?.reset();
-            _stage3_4WinClearAndGrowController?.reset();
-          });
+          }); // <<< SEMICOLON ADDED HERE
         }
       } else { // A win ('X' or 'O') just happened
          if (mounted) {
@@ -592,7 +579,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
             if (!isWinningCell) { 
               String? mark = gameState.getCellState(widget.miniBoardIndex, i);
               if (mark != null) {
-                int r = i ~/ 3; int c = i % 3;
+                int r = i ~/ 3; int c = cellIndex % 3;
                 convergingElements.add(Positioned(
                   left: c * cellWidth, top: r * cellHeight,
                   width: cellWidth, height: cellHeight,

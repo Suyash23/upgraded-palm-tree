@@ -20,7 +20,7 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
   bool _startMiniBoardAnimations = false;
 
   // GlobalKeys for MiniBoardWidgets
-  final List<GlobalKey<_MiniBoardWidgetState>> _miniBoardKeys = List.generate(9, (_) => GlobalKey<_MiniBoardWidgetState>());
+  final List<GlobalKey<MiniBoardWidgetState>> _miniBoardKeys = List.generate(9, (_) => GlobalKey<MiniBoardWidgetState>());
 
   // New state variables for super win animation
   late AnimationController _superWinAnimationController;
