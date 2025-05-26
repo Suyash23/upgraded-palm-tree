@@ -19,20 +19,15 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_gameModeInitialized) {
-      final GameMode? mode = ModalRoute.of(context)?.settings.arguments as GameMode?;
       final gameState = Provider.of<GameState>(context, listen: false);
-
-      if (mode != null) {
-        gameState.setGameMode(mode); // Set the mode from arguments
-      } else {
-        // Fallback if no mode is passed (e.g., direct navigation or error)
-        // Ensure GameState's default (humanVsHuman) is explicitly set if not already
-        if (gameState.currentGameMode != GameMode.humanVsHuman) {
-            gameState.setGameMode(GameMode.humanVsHuman);
-        }
+      // currentGameMode should already be correctly set by DifficultyScreen
+      // before navigating to HomeScreen.
+      // We just want to ensure the board is reset for a new game session.
+      if (kDebugMode) {
+        print("[HomeScreen.didChangeDependencies] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
       }
-      // Reset the game state to apply the (potentially new) mode and clear board etc.
-      // _resetGame internally calls gameState.resetGame() which now respects currentGameMode
+      // _resetGame calls gameState.resetGame(), which clears the board, player, winner, etc.,
+      // but should NOT change currentGameMode or selectedAIDifficulty.
       _resetGame(gameState); 
       _gameModeInitialized = true;
     }
