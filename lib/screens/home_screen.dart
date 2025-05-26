@@ -18,10 +18,21 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // Retrieve route arguments and set game mode
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is GameMode) {
+      final gameState = Provider.of<GameState>(context, listen: false);
+      if (kDebugMode) {
+        print("[HomeScreen.didChangeDependencies] Received game mode from arguments: $arguments. Setting game mode.");
+      }
+      gameState.setGameMode(arguments);
+    }
+
     if (!_gameModeInitialized) {
       final gameState = Provider.of<GameState>(context, listen: false);
       // currentGameMode should already be correctly set by DifficultyScreen
-      // before navigating to HomeScreen.
+      // or by the logic above before navigating to HomeScreen.
       // We just want to ensure the board is reset for a new game session.
       if (kDebugMode) {
         print("[HomeScreen.didChangeDependencies] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
