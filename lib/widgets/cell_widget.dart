@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../logic/game_state.dart';
+import '../themes/color_schemes.dart'; // Assuming this path
 import '../painters/x_painter.dart';
 import '../painters/o_painter.dart';
 
@@ -73,6 +76,9 @@ class _CellWidgetState extends State<CellWidget> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final gameState = Provider.of<GameState>(context, listen: false); // Or listen:true if other parts depend
+    final AppColorScheme scheme = gameState.currentColorScheme;
+
     return MouseRegion(
       onEnter: (_) { if (widget.isPlayableCell) setState(() => _isHovering = true); },
       onExit: (_) { if (_isHovering) setState(() => _isHovering = false); },
@@ -91,15 +97,15 @@ class _CellWidgetState extends State<CellWidget> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildMark() {
+  Widget _buildMark(AppColorScheme scheme) { // Pass scheme to _buildMark
     if (widget.mark == 'X') {
       return CustomPaint(
-        painter: XPainter(progress: _markAnimation.value),
+        painter: XPainter(progress: _markAnimation.value, color: scheme.xColor),
         size: Size.infinite,
       );
     } else if (widget.mark == 'O') {
       return CustomPaint(
-        painter: OPainter(progress: _markAnimation.value),
+        painter: OPainter(progress: _markAnimation.value, color: scheme.oColor),
         size: Size.infinite,
       );
     }

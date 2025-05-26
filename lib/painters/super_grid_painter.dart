@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 class SuperGridPainter extends CustomPainter {
   final double progress; // For animation later, 0.0 to 1.0
+  final Color gridColor;
 
-  SuperGridPainter({this.progress = 1.0}); // Default to fully drawn
+  SuperGridPainter({this.progress = 1.0, required this.gridColor});
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF333333) // Dark grey
+      ..color = gridColor // New logic
       ..strokeWidth = 6.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round; // Optional: for smoother ends if desired
@@ -51,6 +52,6 @@ class SuperGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant SuperGridPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.gridColor != gridColor;
   }
 }

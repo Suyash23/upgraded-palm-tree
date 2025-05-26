@@ -3,13 +3,20 @@ import 'package:flutter/material.dart';
 class MiniGridPainter extends CustomPainter {
   final bool isPlayable;
   final double progress; // For animation later, 0.0 to 1.0
+  final Color gridColor;
+  final Color activeGridColor;
 
-  MiniGridPainter({this.isPlayable = false, this.progress = 1.0}); // Default to fully drawn
+  MiniGridPainter({
+    this.isPlayable = false,
+    this.progress = 1.0,
+    required this.gridColor,
+    required this.activeGridColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = isPlayable ? const Color(0xFFDAA520) : const Color(0xFF007bff) // Dark yellow or Blue
+      ..color = isPlayable ? activeGridColor : gridColor // New logic
       ..strokeWidth = 3.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round; // Optional
@@ -48,6 +55,9 @@ class MiniGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MiniGridPainter oldDelegate) {
-    return oldDelegate.isPlayable != isPlayable || oldDelegate.progress != progress;
+    return oldDelegate.isPlayable != isPlayable ||
+           oldDelegate.progress != progress ||
+           oldDelegate.gridColor != gridColor ||
+           oldDelegate.activeGridColor != activeGridColor;
   }
 }

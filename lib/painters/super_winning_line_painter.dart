@@ -2,22 +2,22 @@ import 'package:flutter/material.dart';
 
 class SuperWinningLinePainter extends CustomPainter {
   final List<Offset>? lineCoords; // Start and End points
-  final String? winner; // 'X' or 'O'
   final double progress;
+  final Color lineColor; // Added
 
   SuperWinningLinePainter({
     this.lineCoords,
-    this.winner,
     required this.progress,
+    required this.lineColor, // Added
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (lineCoords == null || lineCoords!.isEmpty || winner == null || progress == 0) return;
+    if (lineCoords == null || lineCoords!.isEmpty || progress == 0) return; // Removed winner check
 
     final paint = Paint()
-      ..color = (winner == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE)
-      ..strokeWidth = 8.0
+      ..color = lineColor // New logic
+      ..strokeWidth = 8.0 // Ensure this is 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -36,7 +36,7 @@ class SuperWinningLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant SuperWinningLinePainter oldDelegate) {
     return oldDelegate.lineCoords != lineCoords || 
-           oldDelegate.winner != winner ||
-           oldDelegate.progress != progress;
+           oldDelegate.progress != progress ||
+           oldDelegate.lineColor != lineColor; // Updated
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async'; // Add this import
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../themes/color_schemes.dart'; // Ensure AppColorScheme is imported
 import '../painters/mini_grid_painter.dart';
 import '../painters/x_painter.dart'; 
 import '../painters/o_painter.dart'; 
@@ -420,9 +421,10 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
       // }
     }
 
-  @override
+ @override
   Widget build(BuildContext context) {
-    final gameState = Provider.of<GameState>(context, listen: false); 
+    final gameState = Provider.of<GameState>(context, listen: false);
+    final AppColorScheme scheme = gameState.currentColorScheme; // Get the scheme
 
     return LayoutBuilder( 
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -458,12 +460,15 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
               if (mounted) setState(() { _pendingWinAnimationSetup = false; });
             }
           });
-          // Render a basic grid or empty container while win animation setup is pending
-          // to prevent the flash of the final large X/O.
           return AspectRatio(
             aspectRatio: 1.0,
             child: CustomPaint(
-              painter: MiniGridPainter(isPlayable: false, progress: 1.0), // Basic grid
+              painter: MiniGridPainter(
+                isPlayable: false, 
+                progress: 1.0, 
+                gridColor: scheme.miniGridColor, 
+                activeGridColor: scheme.activeMiniGridColor
+              ), 
               size: Size.infinite,
             ),
           );
@@ -473,26 +478,30 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
           double cellWidth = boardSize.width / 3;
           double cellHeight = boardSize.height / 3;
           Offset boardCenter = Offset(boardSize.width / 2, boardSize.height / 2);
+          List<Widget> stage3_4Elements = [];
 
-          List<Widget> stage3_4Elements = []; // Renamed for clarity
-
-          // Animated Grid
           if (_stage3GridOpacityAnim != null && _stage3GridScaleAnim != null) {
             stage3_4Elements.add(Opacity(
               opacity: _stage3GridOpacityAnim!.value,
               child: Transform.scale(
                 scale: _stage3GridScaleAnim!.value,
-                child: CustomPaint(painter: MiniGridPainter(isPlayable: false, progress: 1.0), size: Size.infinite),
+                child: CustomPaint(
+                  painter: MiniGridPainter(
+                    isPlayable: false, 
+                    progress: 1.0, 
+                    gridColor: scheme.miniGridColor, 
+                    activeGridColor: scheme.activeMiniGridColor
+                  ), 
+                  size: Size.infinite
+                ),
               ),
             ));
           }
 
-          // Animated Non-Winning Marks
           for (int i = 0; i < _nonWinningCellIndicesStage3.length; i++) {
             int cellIndex = _nonWinningCellIndicesStage3[i];
             String? mark = gameState.miniBoardStates[widget.miniBoardIndex][cellIndex]; 
             if (mark == null) continue; 
-
             int r = cellIndex ~/ 3; int c = cellIndex % 3;
             stage3_4Elements.add(Positioned(
               left: c * cellWidth, top: r * cellHeight,
@@ -502,21 +511,18 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
                 child: Transform.scale(
                   scale: _stage3NonWinningMarkScaleAnims[i].value,
                   child: mark == 'X'
-                      ? CustomPaint(painter: XPainter(progress: 1.0), size: Size.infinite)
-                      : CustomPaint(painter: OPainter(progress: 1.0), size: Size.infinite),
+                      ? CustomPaint(painter: XPainter(progress: 1.0, color: scheme.xColor), size: Size.infinite)
+                      : CustomPaint(painter: OPainter(progress: 1.0, color: scheme.oColor), size: Size.infinite),
                 ),
               ),
             ));
           }
           
-          // Stage 4: Animated "Hero" Mark (growing)
           if (_heroMarkIndexInPattern != null && _winAnimationPlayer != null && _winningCellIndices != null && _stage4HeroMarkScaleAnim != null) {
             double heroAnimatedScale = _stage4HeroMarkScaleAnim!.value; 
-            
             Widget heroMarkWidget = (_winAnimationPlayer == 'X')
-                ? CustomPaint(painter: XPainter(progress: 1.0), size: Size(cellWidth, cellHeight))
-                : CustomPaint(painter: OPainter(progress: 1.0), size: Size(cellWidth, cellHeight));
-            
+                ? CustomPaint(painter: XPainter(progress: 1.0, color: scheme.xColor), size: Size(cellWidth, cellHeight))
+                : CustomPaint(painter: OPainter(progress: 1.0, color: scheme.oColor), size: Size(cellWidth, cellHeight));
             stage3_4Elements.add(
               Positioned(
                 left: boardCenter.dx - (cellWidth / 2 * heroAnimatedScale),
@@ -524,7 +530,7 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
                 width: cellWidth * heroAnimatedScale,
                 height: cellHeight * heroAnimatedScale,
                 child: Opacity(
-                  opacity: 1.0, // Hero mark remains fully opaque during its growth in Stage 4
+                  opacity: 1.0,
                   child: heroMarkWidget,
                 ),
               )
@@ -532,12 +538,18 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
           }
           return AspectRatio(aspectRatio: 1.0, child: Stack(children: stage3_4Elements));
         } else if (_isWinAnimationPlaying && _winningLineCoords != null && _winningLineAnimation != null && _winAnimationPlayer != null) {
+          Color lineColorForWin = (_winAnimationPlayer == 'X') ? scheme.xColor : scheme.oColor;
           return AspectRatio(
             aspectRatio: 1.0,
             child: Stack(
               children: [
                 CustomPaint(
-                  painter: MiniGridPainter(isPlayable: false, progress: 1.0),
+                  painter: MiniGridPainter(
+                    isPlayable: false, 
+                    progress: 1.0, 
+                    gridColor: scheme.miniGridColor, 
+                    activeGridColor: scheme.activeMiniGridColor
+                  ),
                   size: Size.infinite,
                 ),
                 GridView.builder(
@@ -558,8 +570,8 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
                 CustomPaint(
                   painter: WinningLinePainter(
                     lineCoords: _winningLineCoords!,
-                    player: _winAnimationPlayer!,
                     progress: _winningLineAnimation!.value,
+                    lineColor: lineColorForWin,
                   ),
                   size: Size.infinite,
                 ),
@@ -569,12 +581,20 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
         } else if (_isStage2WinConverging) {
           double cellWidth = boardSize.width / 3;
           double cellHeight = boardSize.height / 3;
-
           List<Widget> convergingElements = [];
+          Color lineColorForConvWin = (_winAnimationPlayer == 'X') ? scheme.xColor : scheme.oColor;
 
-          convergingElements.add(CustomPaint(painter: MiniGridPainter(isPlayable: false, progress: 1.0), size: Size.infinite));
+          convergingElements.add(CustomPaint(
+            painter: MiniGridPainter(
+              isPlayable: false, 
+              progress: 1.0, 
+              gridColor: scheme.miniGridColor, 
+              activeGridColor: scheme.activeMiniGridColor
+            ), 
+            size: Size.infinite)
+          );
           
-          for (int i = 0; i < 9; i++) {
+          for (int i = 0; i < 9; i++) { // 'i' is cellIndex here
             bool isWinningCell = _winningCellIndices?.contains(i) ?? false;
             if (!isWinningCell) { 
               String? mark = gameState.getCellState(widget.miniBoardIndex, i);
@@ -584,8 +604,8 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
                   left: c * cellWidth, top: r * cellHeight,
                   width: cellWidth, height: cellHeight,
                   child: mark == 'X' 
-                      ? CustomPaint(painter: XPainter(progress:1.0), size: Size.infinite) 
-                      : CustomPaint(painter: OPainter(progress:1.0), size: Size.infinite),
+                      ? CustomPaint(painter: XPainter(progress:1.0, color: scheme.xColor), size: Size.infinite) 
+                      : CustomPaint(painter: OPainter(progress:1.0, color: scheme.oColor), size: Size.infinite),
                 ));
               }
             }
@@ -599,11 +619,9 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
               Offset currentPos = _convergingMarkPositionAnims[i].value;
               double currentScale = _convergingMarkScaleAnims[i].value;
               double currentOpacity = _convergingMarkOpacityAnims[i].value;
-
               Widget markWidget = (_winAnimationPlayer == 'X')
-                  ? CustomPaint(painter: XPainter(progress: 1.0), size: Size(cellWidth, cellHeight))
-                  : CustomPaint(painter: OPainter(progress: 1.0), size: Size(cellWidth, cellHeight));
-
+                  ? CustomPaint(painter: XPainter(progress: 1.0, color: scheme.xColor), size: Size(cellWidth, cellHeight))
+                  : CustomPaint(painter: OPainter(progress: 1.0, color: scheme.oColor), size: Size(cellWidth, cellHeight));
               convergingElements.add(
                 Positioned(
                   left: currentPos.dx - (cellWidth / 2 * currentScale), 
@@ -629,8 +647,8 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
                   child: CustomPaint(
                     painter: WinningLinePainter(
                       lineCoords: _winningLineCoords!, 
-                      player: _winAnimationPlayer!,
                       progress: 1.0, 
+                      lineColor: lineColorForConvWin,
                     ),
                     size: Size.infinite, 
                   ),
@@ -638,7 +656,6 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
               )
             );
           }
-
           return AspectRatio(aspectRatio: 1.0, child: Stack(children: convergingElements));
         } else if (_isDrawAnimationPlaying) {
             return AspectRatio(
@@ -655,7 +672,9 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
                            CustomPaint(
                             painter: MiniGridPainter(
                               isPlayable: false, 
-                              progress: 1.0,   
+                              progress: 1.0,
+                              gridColor: scheme.miniGridColor,
+                              activeGridColor: scheme.activeMiniGridColor
                             ),
                             size: Size.infinite,
                           ),
@@ -682,11 +701,9 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
                     opacity: _drawSymbolFadeInAnimation.value,
                     child: Transform.scale(
                       scale: _drawSymbolScaleUpAnimation.value,
-                      child: const Center(
-                        child: Text(
-                          '½',
-                          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.grey),
-                        ),
+                      child: Text( 
+                        '½',
+                        style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: scheme.secondaryText), 
                       ),
                     ),
                   ),
@@ -696,20 +713,24 @@ class MiniBoardWidgetState extends State<MiniBoardWidget>
         } else if (widget.boardStatus != null) { 
           Widget finalDisplay;
           switch(widget.boardStatus){
-            case 'X':finalDisplay=CustomPaint(painter:XPainter(progress:1.0),size:Size.infinite);break;
-            case 'O':finalDisplay=CustomPaint(painter:OPainter(progress:1.0),size:Size.infinite);break;
-            case 'DRAW':finalDisplay=const Center(child:Text('½',style:TextStyle(fontSize:40,fontWeight:FontWeight.bold,color:Colors.grey)));break;
+            case 'X':finalDisplay=CustomPaint(painter:XPainter(progress:1.0, color: scheme.xColor),size:Size.infinite);break;
+            case 'O':finalDisplay=CustomPaint(painter:OPainter(progress:1.0, color: scheme.oColor),size:Size.infinite);break;
+            case 'DRAW':finalDisplay=Center(child:Text('½',style:TextStyle(fontSize:40,fontWeight:FontWeight.bold, color: scheme.secondaryText)));break; 
             default:finalDisplay=const SizedBox.shrink();
           }
           return AspectRatio(aspectRatio:1.0,child:Container(child:finalDisplay));
         } else { 
-          // Re-added SlideTransition wrapper for _shakeAnimation
           return SlideTransition( 
             position: _shakeAnimation,
             child: AspectRatio(
               aspectRatio:1.0,
               child:CustomPaint(
-                painter:MiniGridPainter(isPlayable:widget.isPlayable,progress:_miniGridAnimation.value),
+                painter:MiniGridPainter(
+                  isPlayable:widget.isPlayable,
+                  progress:_miniGridAnimation.value,
+                  gridColor: scheme.miniGridColor,
+                  activeGridColor: scheme.activeMiniGridColor,
+                ),
                 child:(_miniGridAnimation.value==1.0)
                     ?GridView.builder(physics:const NeverScrollableScrollPhysics(),gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:3),itemCount:9,itemBuilder:(c,ci){String? m=gameState.getCellState(widget.miniBoardIndex,ci);bool iCAP=widget.isPlayable&&m==null;return CellWidget(miniBoardIndex:widget.miniBoardIndex,cellIndexInMiniBoard:ci,mark:m,isPlayableCell:iCAP,onTap:()=>_attemptMoveOnCell(ci));})
                     :const SizedBox.shrink()

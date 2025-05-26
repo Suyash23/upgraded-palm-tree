@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../painters/super_grid_painter.dart';
-import '../painters/super_winning_line_painter.dart'; // Added import
+import '../painters/super_winning_line_painter.dart';
 import 'mini_board_widget.dart';
 import '../logic/game_state.dart';
+import '../themes/color_schemes.dart';
 
 class SuperBoardWidget extends StatefulWidget {
   const SuperBoardWidget({super.key});
@@ -19,24 +20,21 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
 
   bool _startMiniBoardAnimations = false;
 
-  // GlobalKeys for MiniBoardWidgets
   final List<GlobalKey<MiniBoardWidgetState>> _miniBoardKeys = List.generate(9, (_) => GlobalKey<MiniBoardWidgetState>());
 
-  // New state variables for super win animation
   late AnimationController _superWinAnimationController;
   Animation<double>? _superWinningLineAnimation;
   List<Offset>? _superWinningLineCoords;
   String? _superWinnerForAnimation;
   bool _isSuperWinAnimationPlaying = false;
 
-  // Track previous states
   List<String?> _previousSuperBoardState = List.generate(9, (_) => null);
   String? _previousOverallWinner;
 
   @override
   void initState() {
     super.initState();
-    final gameState = Provider.of<GameState>(context, listen: false); // Get GameState for initialization
+    final gameState = Provider.of<GameState>(context, listen: false);
     _previousSuperBoardState = List.from(gameState.superBoardState);
     _previousOverallWinner = gameState.overallWinner;
 
@@ -62,9 +60,8 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
       }
     });
 
-    // Initialize _superWinAnimationController
     _superWinAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 700), // As per spec
+      duration: const Duration(milliseconds: 700),
       vsync: this,
     );
   }
@@ -72,13 +69,10 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
   @override
   void dispose() {
     _mainGridController.dispose();
-    _superWinAnimationController.dispose(); // Added dispose
+    _superWinAnimationController.dispose();
     super.dispose();
   }
 
-  // Helper to calculate super winning line coordinates
-  // Returns a list of [startOffset, endOffset, winningPatternIndices]
-  // winningPatternIndices is a List<int> of the 3 mini-board indices in the line.
   List<dynamic>? _calculateSuperWinningLineCoordsAndPattern(String winner, List<String?> superBoardStatus, Size boardSize) {
     const List<List<int>> winPatterns = [
       [0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]
@@ -123,10 +117,6 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
     
     List<Future<void>> miniBoardFutures = [];
     for (int miniBoardIndex in winningPatternIndices) {
-      // Check if this mini-board actually contributed to THIS win (was not already won by the winner)
-      // This is a simplified check; for more complex scenarios, one might need to compare with _previousSuperBoardState
-      // at the exact moment of the win. However, for now, we assume any board in the winning line
-      // that shows the winner's mark should have its animation awaited.
       if (initialSuperBoardStateForWin[miniBoardIndex] == winner) {
         final key = _miniBoardKeys[miniBoardIndex];
         final state = key.currentState;
@@ -141,26 +131,22 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
         await Future.wait(miniBoardFutures);
       } catch (e) {
         // Handle or log errors from mini-board animations if necessary
-        print("Error waiting for mini-board win animations: $e");
+        // print("Error waiting for mini-board win animations: $e");
       }
     }
 
     if (!mounted) return;
 
-    // It's possible gameState.superBoardState might have changed if another move was made quickly.
-    // For visual consistency of the line, re-calculate with the current superBoardState if needed,
-    // or use the initially passed state. For this implementation, we'll use the initially captured win state.
-    // However, if the board has been reset in the meantime, we should not proceed.
     final currentGameState = Provider.of<GameState>(context, listen: false);
-    if (currentGameState.overallWinner != winner) { // Check if the win is still valid
-        _isSuperWinAnimationPlaying = false; // Ensure it's reset if win invalidated
+    if (currentGameState.overallWinner != winner) {
+        _isSuperWinAnimationPlaying = false;
         _superWinningLineAnimation = null;
         return;
     }
 
     setState(() {
       _superWinningLineCoords = lineCoords;
-      _superWinnerForAnimation = winner;
+      _superWinnerForAnimation = winner; // Still needed to determine X or O color
       _isSuperWinAnimationPlaying = true;
 
       _superWinningLineAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -169,7 +155,7 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
        ..addStatusListener((status) {
            if (status == AnimationStatus.completed) {
                if (mounted) {
-                   // Keep the line drawn, _isSuperWinAnimationPlaying remains true
+                   // Keep the line drawn
                }
            }
        });
@@ -182,6 +168,7 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
   @override
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameState>(context);
+    final AppColorScheme scheme = gameState.currentColorScheme;
     final int? activeMiniBoardIndex = gameState.activeMiniBoardIndex;
     final String? overallWinner = gameState.overallWinner;
 
@@ -192,47 +179,45 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
             if (mounted) {
                 final boardSize = context.size;
                 if (boardSize != null) {
-                    // Pass a copy of the current superBoardState at the moment of win detection.
                     _triggerSuperWinAnimationSequence(overallWinner!, List.from(gameState.superBoardState), boardSize);
                 }
             }
         });
     }
     
-    // Reset animation if overallWinner becomes null (e.g., game reset)
     if(overallWinner == null && (_isSuperWinAnimationPlaying || _superWinningLineAnimation != null)) {
         _superWinAnimationController.reset();
         _superWinningLineAnimation = null;
         _superWinningLineCoords = null;
         _superWinnerForAnimation = null;
         _isSuperWinAnimationPlaying = false;
-        // No need to call setState here if the changes above will trigger a rebuild via other means,
-        // but if they don't, a setState might be needed. The existing Positioned.fill check should handle it.
     }
     
-    // Update previous states at the end of the build, after all logic.
     _previousOverallWinner = overallWinner;
     _previousSuperBoardState = List.from(gameState.superBoardState);
 
     return LayoutBuilder( 
       builder: (context, constraints) {
-        final Size currentBoardSize = constraints.biggest; // Use for consistent sizing within LayoutBuilder
+        final Size currentBoardSize = constraints.biggest;
         return Stack(
           children: [
             AspectRatio(
               aspectRatio: 1.0,
               child: CustomPaint(
-                painter: SuperGridPainter(progress: _mainGridAnimation.value),
+                painter: SuperGridPainter(
+                  progress: _mainGridAnimation.value,
+                  gridColor: scheme.superGridColor,
+                ),
                 child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
                   itemCount: 9,
                   itemBuilder: (context, index) {
-                    String? boardStatus = gameState.superBoardState[index]; // Use current gameState for UI
+                    String? boardStatus = gameState.superBoardState[index];
                     return Padding(
                       padding: const EdgeInsets.all(6.0),
                       child: MiniBoardWidget(
-                        key: _miniBoardKeys[index], // Assign the key
+                        key: _miniBoardKeys[index],
                         miniBoardIndex: index,
                         isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
                         startAnimation: _startMiniBoardAnimations,
@@ -247,11 +232,11 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
               Positioned.fill( 
                 child: CustomPaint(
                   painter: SuperWinningLinePainter(
-                    lineCoords: _superWinningLineCoords!, // Null checked by condition
-                    winner: _superWinnerForAnimation!, // Null checked by condition
+                    lineCoords: _superWinningLineCoords!,
                     progress: _superWinningLineAnimation!.value,
+                    lineColor: (_superWinnerForAnimation == 'X') ? scheme.xColor : scheme.oColor, // Use scheme color
                   ),
-                  size: currentBoardSize, // Use size from LayoutBuilder
+                  size: currentBoardSize,
                 ),
               ),
           ],

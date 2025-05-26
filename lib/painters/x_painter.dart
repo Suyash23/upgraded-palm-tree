@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 class XPainter extends CustomPainter {
   final double progress; // For animation, 0.0 to 1.0
+  final Color color; // New field
 
-  XPainter({this.progress = 1.0}); // Default to fully drawn
+  XPainter({this.progress = 1.0, required this.color}); // Modified constructor
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFFF3860) // Red
+      ..color = color // Use the field
       ..strokeWidth = 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -62,6 +63,6 @@ class XPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant XPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }

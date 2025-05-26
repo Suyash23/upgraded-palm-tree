@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart'; // Required for ChangeNotifier
 import 'ai_player.dart'; 
 import 'ai_move.dart';   
 import 'ai_difficulty.dart'; // Import the new enum
+import '../themes/color_schemes.dart'; // Adjust path if necessary based on file structure
 
 enum ColorSchemeChoice {
   scheme1,
@@ -367,5 +368,17 @@ void applyMoveForSimulation(int miniBoardIdx, int cellIdx, String player) {
     //   print("Color scheme set to: $choice");
     // }
     notifyListeners(); // Important to notify listeners if UI might depend on this
+  }
+
+  AppColorScheme get currentColorScheme {
+    switch (selectedColorScheme) {
+      case ColorSchemeChoice.scheme2:
+        return AppColorSchemes.scheme2;
+      case ColorSchemeChoice.scheme3:
+        return AppColorSchemes.scheme3;
+      case ColorSchemeChoice.scheme1: // Explicitly handle scheme1
+      default: // Default case also returns defaultScheme
+        return AppColorSchemes.defaultScheme;
+    }
   }
 }
