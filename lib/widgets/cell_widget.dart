@@ -90,7 +90,7 @@ class _CellWidgetState extends State<CellWidget> with SingleTickerProviderStateM
             color: _isHovering && widget.isPlayableCell ? Colors.yellow[100] : Colors.transparent,
           ),
           child: Center(
-            child: _buildMark(),
+            child: _buildMark(scheme),
           ),
         ),
       ),
