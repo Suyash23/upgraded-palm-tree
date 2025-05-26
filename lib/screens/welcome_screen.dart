@@ -10,6 +10,15 @@ class WelcomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Super Tic Tac Toe'),
         automaticallyImplyLeading: false, // No back button to a previous screen
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings', // Optional: for accessibility
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(

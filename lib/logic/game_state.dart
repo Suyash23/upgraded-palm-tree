@@ -3,6 +3,12 @@ import 'ai_player.dart';
 import 'ai_move.dart';   
 import 'ai_difficulty.dart'; // Import the new enum
 
+enum ColorSchemeChoice {
+  scheme1,
+  scheme2,
+  scheme3
+}
+
 enum GameMode {
   humanVsHuman,
   humanVsAI
@@ -10,6 +16,7 @@ enum GameMode {
 
 class GameState extends ChangeNotifier {
   final AIPlayer _aiPlayer = AIPlayer(); 
+  ColorSchemeChoice selectedColorScheme = ColorSchemeChoice.scheme1; // Added field
   List<List<String?>> miniBoardStates;
   String currentPlayer;
   int? activeMiniBoardIndex;
@@ -351,5 +358,14 @@ void applyMoveForSimulation(int miniBoardIdx, int cellIdx, String player) {
       return 'DRAW';
     }
     return null; 
+  }
+
+  void setColorScheme(ColorSchemeChoice choice) {
+    selectedColorScheme = choice;
+    // Optional: Add a debug print here if you want to verify in console
+    // if (kDebugMode) {
+    //   print("Color scheme set to: $choice");
+    // }
+    notifyListeners(); // Important to notify listeners if UI might depend on this
   }
 }
