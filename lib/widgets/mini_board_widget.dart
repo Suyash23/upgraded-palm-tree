@@ -42,8 +42,8 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
   late Animation<double> _drawSymbolScaleUpAnimation; 
   bool _isDrawAnimationPlaying = false;
 
-  late AnimationController _shakeAnimationController;
-  late Animation<Offset> _shakeAnimation; 
+  late AnimationController _shakeAnimationController; // Re-added
+  late Animation<Offset> _shakeAnimation; // Re-added
 
   AnimationController? _stage2WinConvergeController;
   List<Animation<Offset>> _convergingMarkPositionAnims = [];
@@ -62,6 +62,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
   List<Animation<double>> _stage3NonWinningMarkScaleAnims = [];
   List<int> _nonWinningCellIndicesStage3 = []; 
   bool _isStage3_4WinClearingAndGrowing = false; 
+  Animation<double>? _stage4HeroMarkScaleAnim; // Declare the missing animation field
 
   bool _pendingWinAnimationSetup = false; 
 
@@ -94,16 +95,20 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
       vsync: this,
     );
 
+    // Re-added _shakeAnimationController and _shakeAnimation initialization
     _shakeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
-    );
+    )..addListener(() { 
+      setState(() {}); 
+    });
+
     _shakeAnimation = TweenSequence<Offset>([
-      TweenSequenceItem(tween: Tween(begin: Offset.zero, end: const Offset(-0.10, 0.0)), weight: 1), // Changed
-      TweenSequenceItem(tween: Tween(begin: const Offset(-0.10, 0.0), end: const Offset(0.10, 0.0)), weight: 2), // Changed
-      TweenSequenceItem(tween: Tween(begin: const Offset(0.10, 0.0), end: const Offset(-0.10, 0.0)), weight: 2), // Changed
-      TweenSequenceItem(tween: Tween(begin: const Offset(-0.10, 0.0), end: const Offset(0.10, 0.0)), weight: 2), // Changed
-      TweenSequenceItem(tween: Tween(begin: const Offset(0.10, 0.0), end: Offset.zero), weight: 1), // Changed
+      TweenSequenceItem(tween: Tween(begin: Offset.zero, end: const Offset(-0.10, 0.0)), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: const Offset(-0.10, 0.0), end: const Offset(0.10, 0.0)), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: const Offset(0.10, 0.0), end: const Offset(-0.10, 0.0)), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: const Offset(-0.10, 0.0), end: const Offset(0.10, 0.0)), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: const Offset(0.10, 0.0), end: Offset.zero), weight: 1),
     ]).animate(CurvedAnimation(
       parent: _shakeAnimationController,
       curve: const Cubic(.36,.07,.19,.97),
@@ -182,7 +187,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
     _miniGridController.dispose();
     _winAnimationController.dispose(); 
     _drawAnimationController.dispose(); 
-    _shakeAnimationController.dispose(); 
+    _shakeAnimationController.dispose(); // Re-added
     _stage2WinConvergeController?.dispose(); 
     _stage3_4WinClearAndGrowController?.dispose(); 
     super.dispose();
@@ -365,19 +370,35 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
     return [extendedStart, extendedEnd];
   }
 
-  void _attemptMoveOnCell(int cellIndexInMiniBoard) {
+  Future<void> _attemptMoveOnCell(int cellIndexInMiniBoard) async {
       final gameState = Provider.of<GameState>(context, listen: false);
-      if (gameState.getCellState(widget.miniBoardIndex, cellIndexInMiniBoard) != null) {
-          _shakeAnimationController.reset();
-          _shakeAnimationController.forward();
-          return;
-      }
 
-      bool moveMade = gameState.makeMove(widget.miniBoardIndex, cellIndexInMiniBoard);
-      if (!moveMade && mounted) { 
+      // Shake only if it's not this mini-board's turn (another mini-board is active).
+      if (gameState.activeMiniBoardIndex != null && widget.miniBoardIndex != gameState.activeMiniBoardIndex) {
         _shakeAnimationController.reset();
         _shakeAnimationController.forward();
+        return; 
       }
+
+      // If it IS this mini-board's turn (or no board is specifically active),
+      // check if the cell is already occupied. If so, return silently (no shake).
+      if (gameState.getCellState(widget.miniBoardIndex, cellIndexInMiniBoard) != null) {
+        // Optionally, print a debug message here like: print("Cell is already occupied, move not processed.");
+        return; 
+      }
+
+      // Changed from makeMove to processPlayerMove. 
+      // processPlayerMove is async void and handles notifyListeners itself.
+      // The 'moveMade' boolean is no longer returned.
+      // Shake animation for invalid (already taken) moves is handled by the check above.
+      // If a move is valid, processPlayerMove will update the state and trigger rebuilds.
+      await gameState.processPlayerMove(widget.miniBoardIndex, cellIndexInMiniBoard);
+
+      // The following block is removed as moveMade is no longer available.
+      // if (!moveMade && mounted) { 
+      //   _shakeAnimationController.reset();
+      //   _shakeAnimationController.forward();
+      // }
     }
 
   @override
@@ -418,6 +439,15 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
               if (mounted) setState(() { _pendingWinAnimationSetup = false; });
             }
           });
+          // Render a basic grid or empty container while win animation setup is pending
+          // to prevent the flash of the final large X/O.
+          return AspectRatio(
+            aspectRatio: 1.0,
+            child: CustomPaint(
+              painter: MiniGridPainter(isPlayable: false, progress: 1.0), // Basic grid
+              size: Size.infinite,
+            ),
+          );
         }
         
         if (_isStage3_4WinClearingAndGrowing) {
@@ -654,6 +684,7 @@ class _MiniBoardWidgetState extends State<MiniBoardWidget>
           }
           return AspectRatio(aspectRatio:1.0,child:Container(child:finalDisplay));
         } else { 
+          // Re-added SlideTransition wrapper for _shakeAnimation
           return SlideTransition( 
             position: _shakeAnimation,
             child: AspectRatio(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../logic/game_state.dart'; // Import GameMode
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -31,72 +32,29 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 60),
-            ElevatedButton(
+            ElevatedButton( // First button
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                 textStyle: const TextStyle(fontSize: 18),
               ),
-              onPressed: () {
-import 'package:flutter/material.dart';
-import '../logic/game_state.dart'; // Import GameMode
-
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Super Tic Tac Toe'),
-        automaticallyImplyLeading: false,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Super Tic Tac Toe',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueAccent, 
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Flutter Edition',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 60),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                textStyle: const TextStyle(fontSize: 18),
-              ),
-              onPressed: () {
+              onPressed: () { // Correctly defined onPressed
                 Navigator.pushReplacementNamed(
                   context,
                   '/game',
                   arguments: GameMode.humanVsHuman,
                 );
               },
-              child: const Text('Play vs Human'),
+              child: const Text('Play vs Human'), // Added missing child
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
+            ElevatedButton( // Second button
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                 textStyle: const TextStyle(fontSize: 18),
               ),
               onPressed: () {
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/game',
-                  arguments: GameMode.humanVsAI,
-                );
+                // Setting GameMode and AIDifficulty will now be handled by DifficultyScreen
+                Navigator.of(context).pushNamed('/difficulty');
               },
               child: const Text('Play vs AI'),
             ),
