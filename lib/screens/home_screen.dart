@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Super Tic Tac Toe')),
+      appBar: AppBar(title: const Text('')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

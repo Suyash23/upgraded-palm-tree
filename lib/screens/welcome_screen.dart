@@ -13,7 +13,7 @@ class WelcomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Super Tic Tac Toe'),
+        title: const Text(''),
         automaticallyImplyLeading: false, // No back button to a previous screen
         actions: <Widget>[
           IconButton(
@@ -37,14 +37,14 @@ class WelcomeScreen extends StatelessWidget {
                 color: scheme.accentColor, // New color from scheme
               ),
             ),
-            const SizedBox(height: 10),
-            Text( // Updated second Text widget
-              'Flutter Edition',
-              style: TextStyle(
-                fontSize: 18,
-                color: scheme.secondaryText, // New color from scheme
-              ),
-            ),
+            // const SizedBox(height: 10), // Removed
+            // Text( // Updated second Text widget // Removed
+            //   'Flutter Edition',
+            //   style: TextStyle(
+            //     fontSize: 18,
+            //     color: scheme.secondaryText, // New color from scheme
+            //   ),
+            // ), // Removed
             const SizedBox(height: 60),
             ElevatedButton( // First button
               style: roundedSquareButtonStyle.copyWith(
