@@ -23,43 +23,77 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Retrieve route arguments and set game mode
-    final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is GameMode) {
-      final gameState = Provider.of<GameState>(context, listen: false);
-      if (kDebugMode) {
-        print("[HomeScreen.didChangeDependencies] Received game mode from arguments: $arguments. Setting game mode.");
-      }
-      gameState.setGameMode(arguments);
-    }
-
     if (!_gameModeInitialized) {
-      final gameState = Provider.of<GameState>(context, listen: false);
-      // currentGameMode should already be correctly set by DifficultyScreen
-      // or by the logic above before navigating to HomeScreen.
-      // We just want to ensure the board is reset for a new game session.
-      if (kDebugMode) {
-        print("[HomeScreen.didChangeDependencies] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
-      }
-      // _resetGame calls gameState.resetGame(), which clears the board, player, winner, etc.,
-      // but should NOT change currentGameMode or selectedAIDifficulty.
-      _resetGame(gameState); 
-      _gameModeInitialized = true;
+      _gameModeInitialized = true; // Set flag immediately
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return; // Check if widget is still in the tree
+
+        // All logic that might call notifyListeners or depends on initial build being complete
+        final arguments = ModalRoute.of(context)?.settings.arguments;
+        // It's important to get gameState here, inside the callback,
+        // to ensure it's accessed with the correct context if context matters for Provider.
+        final gameState = Provider.of<GameState>(context, listen: false);
+
+        if (arguments is GameMode) {
+          if (kDebugMode) {
+            print("[HomeScreen.didChangeDependencies.postFrame] Received game mode from arguments: $arguments. Setting game mode.");
+          }
+          // Ensure setGameMode is called before _resetGame if _resetGame depends on the mode.
+          // Based on current GameState, setGameMode does not directly call notifyListeners,
+          // but it's good practice to group state-affecting calls here.
+          gameState.setGameMode(arguments);
+        }
+        // else {
+        //   // This block was commented out in the prompt's example, implying that if arguments
+        //   // aren't GameMode, we proceed with the existing gameState.currentGameMode.
+        //   // No explicit action needed here if that's the desired behavior.
+        //   if (kDebugMode) {
+        //     print("[HomeScreen.didChangeDependencies.postFrame] Game mode not found in arguments or not of type GameMode. Using current from GameState: ${gameState.currentGameMode}");
+        //   }
+        // }
+
+        // This part handles the game reset, which was the primary concern for post-frame callback.
+        if (kDebugMode) {
+          print("[HomeScreen.didChangeDependencies.postFrame] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
+        }
+        // _resetGame calls gameState.resetGame(), which clears the board, player, winner, etc.,
+        // and also calls setState() locally in _HomeScreenState.
+        // This is why it needs to be in a post-frame callback.
+        _resetGame(gameState, inPostFrameCallback: true);
+      });
     }
   }
 
-  void _resetGame(GameState gameState) {
+  void _resetGame(GameState gameState, {bool inPostFrameCallback = false}) {
     // GameState.resetGame() now correctly does not reset currentGameMode.
     // It just clears board, player, winner status.
-    gameState.resetGame(); 
+    gameState.resetGame(); // This calls notifyListeners() in GameState
     
     // If we want to ensure the current mode (possibly set from args) is active 
     // before animations re-trigger, this is implicitly handled as setGameMode was called.
     // No need to call gameState.setGameMode(gameState.currentGameMode) again here.
 
-    setState(() {
-      _superBoardKey = UniqueKey(); 
-    });
+    if (inPostFrameCallback) {
+      // Already in a post-frame callback, safe to call setState directly
+      // after the gameState.resetGame() has potentially scheduled other builds.
+      if (mounted) {
+        setState(() {
+          _superBoardKey = UniqueKey();
+        });
+      }
+    } else {
+      // Called from a direct action (e.g., button press), schedule setState
+      // to run after the current frame, ensuring it doesn't clash with
+      // builds potentially triggered by gameState.resetGame().
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _superBoardKey = UniqueKey();
+          });
+        }
+      });
+    }
   }
 
   @override
