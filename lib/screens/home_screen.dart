@@ -116,9 +116,10 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
 
     return Scaffold(
       // appBar: AppBar(title: const Text('')), // AppBar removed
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea( // New SafeArea widget
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -167,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
           ],
           ),
         ),
-      // ), // Padding widget removed
+      ), // End of SafeArea
     );
   }
 }
