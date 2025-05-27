@@ -208,9 +208,11 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
                   progress: _mainGridAnimation.value,
                   gridColor: scheme.superGridColor,
                 ),
-                child: GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                child: Transform.translate(
+                  offset: Offset(0, -currentBoardSize.height / 6),
+                  child: GridView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
                   itemCount: 9,
                   itemBuilder: (context, index) {
                     String? boardStatus = gameState.superBoardState[index];
@@ -221,10 +223,11 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
                         miniBoardIndex: index,
                         isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
                         startAnimation: _startMiniBoardAnimations,
-                        boardStatus: boardStatus, 
+                        boardStatus: boardStatus,
                       ),
                     );
                   },
+                  ),
                 ),
               ),
             ),
