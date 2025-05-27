@@ -2,6 +2,13 @@ import 'package:flutter/foundation.dart'; // Required for ChangeNotifier
 import 'ai_player.dart'; 
 import 'ai_move.dart';   
 import 'ai_difficulty.dart'; // Import the new enum
+import '../themes/color_schemes.dart'; // Adjust path if necessary based on file structure
+
+enum ColorSchemeChoice {
+  scheme1,
+  scheme2,
+  scheme3
+}
 
 enum GameMode {
   humanVsHuman,
@@ -10,6 +17,7 @@ enum GameMode {
 
 class GameState extends ChangeNotifier {
   final AIPlayer _aiPlayer = AIPlayer(); 
+  ColorSchemeChoice selectedColorScheme = ColorSchemeChoice.scheme1; // Added field
   List<List<String?>> miniBoardStates;
   String currentPlayer;
   int? activeMiniBoardIndex;
@@ -66,43 +74,81 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+GameState copyWith() {
+  GameState newGameState = GameState();
+  newGameState.miniBoardStates = List.generate(9, (i) => List.from(miniBoardStates[i]));
+  newGameState.superBoardState = List.from(superBoardState);
+  newGameState.currentPlayer = currentPlayer;
+  newGameState.activeMiniBoardIndex = activeMiniBoardIndex;
+  newGameState.gameActive = gameActive;
+  newGameState.overallWinner = overallWinner;
+  newGameState.currentGameMode = currentGameMode;
+  newGameState.selectedAIDifficulty = selectedAIDifficulty;
+  // isAITurnInProgress is a transient state, typically not part of a pure model copy for simulation
+  // but if minimax needs to be aware of it, it could be copied. For now, let's assume it's not needed for the simulation part.
+  newGameState.isAITurnInProgress = false; // Default for copies used in simulation
+  return newGameState;
+}
+
   // Private helper method to apply a validated move
   // The duplicated version (taking 2 arguments) has been removed.
   // This is the correct version (taking 3 arguments).
-  void _applyValidatedMove(int miniBoardIdx, int cellIdx, String player) {
-    // String playerMakingThisMove = currentPlayer; // Changed: Use passed player
+// Made public for AI simulation purposes. Consider a more restricted internal API if needed.
+void applyMoveForSimulation(int miniBoardIdx, int cellIdx, String player) {
+  // This method directly applies a move and updates board state WITHOUT notifyListeners
+  // or AI turn triggers. It's intended for use by the AI's simulation.
+
+  if (miniBoardStates[miniBoardIdx][cellIdx] != null) {
+    // This should ideally not happen if _getAllValidMoves is correct
+    if (kDebugMode) print("applyMoveForSimulation: Cell $miniBoardIdx-$cellIdx is already occupied.");
+    return; // Or throw an error
+  }
+  if (superBoardState[miniBoardIdx] != null) {
+    if (kDebugMode) print("applyMoveForSimulation: Mini-board $miniBoardIdx is already decided.");
+    return; // Or throw an error
+  }
+   if (activeMiniBoardIndex != null && miniBoardIdx != activeMiniBoardIndex) {
+    if (superBoardState[activeMiniBoardIndex!] == null) { // only enforce if the required board is playable
+        if (kDebugMode) print("applyMoveForSimulation: Must play in active board $activeMiniBoardIndex, tried $miniBoardIdx.");
+        return; // Or throw an error
+    }
+    // If the required board (activeMiniBoardIndex) is already won/drawn, then the player can choose any other open board.
+    // This logic is implicitly handled by _getAllValidMoves providing the correct set of moves.
+    // So, if a move to miniBoardIdx is "valid" according to _getAllValidMoves, we should allow it here.
+  }
+
+
     miniBoardStates[miniBoardIdx][cellIdx] = player;
 
-    if (superBoardState[miniBoardIdx] == null) {
-      String? miniBoardResult = _checkMiniBoardWinner(miniBoardIdx);
+  if (superBoardState[miniBoardIdx] == null) { // Check if this mini-board was not already decided
+    String? miniBoardResult = _checkMiniBoardWinner(miniBoardIdx); // This uses the current (modified) miniBoardStates
       if (miniBoardResult != null) {
         superBoardState[miniBoardIdx] = miniBoardResult;
-        if (kDebugMode) { print("Mini-board $miniBoardIdx result: $miniBoardResult by $player"); }
+      // if (kDebugMode) { print("applyMoveForSimulation: Mini-board $miniBoardIdx result: $miniBoardResult by $player"); }
 
-        String? gameResult = _checkOverallWinner();
+      String? gameResult = _checkOverallWinner(); // This uses the current (modified) superBoardState
         if (gameResult != null) {
           overallWinner = gameResult;
-          gameActive = false;
-          if (kDebugMode) { print("Overall game result: $overallWinner. Game over."); }
+        gameActive = false; // Game ends
+        // if (kDebugMode) { print("applyMoveForSimulation: Overall game result: $overallWinner. Game over."); }
         }
       }
     }
 
-    if (gameActive) {
-      currentPlayer = (player == 'X') ? 'O' : 'X'; // Switch to next player
-      if (superBoardState[cellIdx] == null) {
+  if (gameActive) { // If game didn't end with this move
+    currentPlayer = (player == 'X') ? 'O' : 'X'; // Switch player
+
+    // Determine next active mini-board
+    if (superBoardState[cellIdx] == null) { // If the target mini-board (based on current cellIdx) is not decided
         activeMiniBoardIndex = cellIdx;
       } else {
-        activeMiniBoardIndex = null;
+      activeMiniBoardIndex = null; // Next player can play anywhere undecided
       }
     } else {
-      activeMiniBoardIndex = null; // Game ended
+    activeMiniBoardIndex = null; // Game ended, no next active board
     }
 
-    if (kDebugMode) {
-      print("Move applied by $player in board $miniBoardIdx, cell $cellIdx. Next player: $currentPlayer. Next forced: $activeMiniBoardIndex. SuperBoard: $superBoardState. Overall: $overallWinner");
-    }
-    // notifyListeners() will be called by the public method that calls this
+  // No print statements or notifyListeners() for simulation
   }
 
   // Renamed and refactored makeMove
@@ -122,19 +168,56 @@ class GameState extends ChangeNotifier {
       return false;
     }
     if (activeMiniBoardIndex != null) {
-      if (miniBoardIdx != activeMiniBoardIndex) {
-        if (kDebugMode) { print("Invalid move: Must play in active board $activeMiniBoardIndex, but tried to play in $miniBoardIdx."); }
+    // If activeMiniBoardIndex points to a board that IS decided, player can play anywhere.
+    // This check should only fail if player tries to play in a board DIFFERENT from activeMiniBoardIndex
+    // AND activeMiniBoardIndex itself is NOT decided.
+    if (miniBoardIdx != activeMiniBoardIndex && superBoardState[activeMiniBoardIndex!] == null) {
+      if (kDebugMode) { print("Invalid move: Must play in active board $activeMiniBoardIndex (which is not decided), but tried to play in $miniBoardIdx."); }
         return false;
       }
-      if (superBoardState[activeMiniBoardIndex!] != null) {
-           if (kDebugMode) { print("Logical error: activeMiniBoardIndex ($activeMiniBoardIndex) is set, but that board is already decided (${superBoardState[activeMiniBoardIndex!]}). This shouldn't happen."); }
-          return false;
-      }
+    // It's okay if miniBoardIdx != activeMiniBoardIndex if superBoardState[activeMiniBoardIndex!] IS decided.
+    // In that case, the player can choose any other non-decided board.
+    // This specific validation within _applyMoveInternal might need to be relaxed or aligned with _getAllValidMoves logic.
+    // For now, the logic in _getAllValidMoves is what determines playable boards.
+    // If _getAllValidMoves says a move is valid, _applyMoveInternal should generally allow it.
     }
     // --- End: Initial Validation ---
 
-    // Apply the player's move
-    _applyValidatedMove(miniBoardIdx, cellIdx, player);
+  // Apply the move
+  miniBoardStates[miniBoardIdx][cellIdx] = player;
+
+  // Check if the mini-board where the move was made has a winner or is a draw
+  if (superBoardState[miniBoardIdx] == null) { // Only check if not already decided
+      String? miniBoardResult = _checkMiniBoardWinner(miniBoardIdx);
+      if (miniBoardResult != null) {
+          superBoardState[miniBoardIdx] = miniBoardResult;
+          if (kDebugMode) { print("_applyMoveInternal: Mini-board $miniBoardIdx result: $miniBoardResult by $player"); }
+
+          // Check for overall game winner after this mini-board is decided
+          String? gameResult = _checkOverallWinner();
+          if (gameResult != null) {
+              overallWinner = gameResult;
+              gameActive = false; // Game ends
+              if (kDebugMode) { print("_applyMoveInternal: Overall game result: $overallWinner. Game over."); }
+          }
+      }
+  }
+
+  // If the game is still active, switch player and determine next active mini-board
+  if (gameActive) {
+      currentPlayer = (player == 'X') ? 'O' : 'X';
+
+      // Determine next active mini-board:
+      // If the mini-board corresponding to the cell just played in (cellIdx) is not yet won/drawn,
+      // it becomes the activeMiniBoardIndex. Otherwise, the next player can play in any undecided mini-board.
+      if (superBoardState[cellIdx] == null) {
+          activeMiniBoardIndex = cellIdx;
+      } else {
+          activeMiniBoardIndex = null; // Player can choose any non-decided board
+      }
+  } else {
+      activeMiniBoardIndex = null; // Game ended, no next active board
+  }
 
     // AI turn handling logic has been removed from here.
 
@@ -231,6 +314,12 @@ class GameState extends ChangeNotifier {
     return miniBoardStates[miniBoardIdx][cellIdx];
   }
 
+  // Public getter for overallWinner for Minimax
+  String? getOverallWinner() => overallWinner;
+
+  // Public getter for gameActive for Minimax
+  bool isGameActive() => gameActive;
+
   String? _checkOverallWinner() {
     const List<List<int>> winPatterns = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -252,7 +341,7 @@ class GameState extends ChangeNotifier {
   }
 
   String? _checkMiniBoardWinner(int miniBoardIndex) {
-    List<String?> board = miniBoardStates[miniBoardIndex];
+    List<String?> board = miniBoardStates[miniBoardIndex]; // Operates on the current instance's state
     const List<List<int>> winPatterns = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8],
       [0, 3, 6], [1, 4, 7], [2, 5, 8],
@@ -270,5 +359,26 @@ class GameState extends ChangeNotifier {
       return 'DRAW';
     }
     return null; 
+  }
+
+  void setColorScheme(ColorSchemeChoice choice) {
+    selectedColorScheme = choice;
+    // Optional: Add a debug print here if you want to verify in console
+    // if (kDebugMode) {
+    //   print("Color scheme set to: $choice");
+    // }
+    notifyListeners(); // Important to notify listeners if UI might depend on this
+  }
+
+  AppColorScheme get currentColorScheme {
+    switch (selectedColorScheme) {
+      case ColorSchemeChoice.scheme2:
+        return AppColorSchemes.scheme2;
+      case ColorSchemeChoice.scheme3:
+        return AppColorSchemes.scheme3;
+      case ColorSchemeChoice.scheme1: // Explicitly handle scheme1
+      default: // Default case also returns defaultScheme
+        return AppColorSchemes.defaultScheme;
+    }
   }
 }

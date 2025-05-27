@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import '../logic/game_state.dart';
 import '../widgets/super_board_widget.dart';
+import '../themes/color_schemes.dart'; // Added import
 
 class HomeScreen extends StatefulWidget { // Changed to StatefulWidget
   const HomeScreen({super.key});
@@ -18,10 +21,21 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    // Retrieve route arguments and set game mode
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is GameMode) {
+      final gameState = Provider.of<GameState>(context, listen: false);
+      if (kDebugMode) {
+        print("[HomeScreen.didChangeDependencies] Received game mode from arguments: $arguments. Setting game mode.");
+      }
+      gameState.setGameMode(arguments);
+    }
+
     if (!_gameModeInitialized) {
       final gameState = Provider.of<GameState>(context, listen: false);
       // currentGameMode should already be correctly set by DifficultyScreen
-      // before navigating to HomeScreen.
+      // or by the logic above before navigating to HomeScreen.
       // We just want to ensure the board is reset for a new game session.
       if (kDebugMode) {
         print("[HomeScreen.didChangeDependencies] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
@@ -63,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
     // The original Provider.of<GameState>(context) (which implies listen: true)
     // will be used for the actual UI building parts that follow.
     final gameStateForUI = Provider.of<GameState>(context); // Re-get with listen: true for UI
+    final AppColorScheme scheme = gameStateForUI.currentColorScheme; // Get the scheme
     
     String statusText;
     // Use gameStateForUI for parts of the UI that need to react to changes
@@ -130,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
               width: 400,
               height: 400,
               padding: const EdgeInsets.all(8.0),
-              color: Colors.grey[200],
+              color: scheme.scaffoldBackground, // New logic
               child: SuperBoardWidget(key: _superBoardKey), // Use the key here
             ),
             const SizedBox(height: 20),

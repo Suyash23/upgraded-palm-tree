@@ -3,13 +3,14 @@ import 'dart:math' as math;
 
 class OPainter extends CustomPainter {
   final double progress; // For animation, 0.0 to 1.0
+  final Color color; // New field
 
-  OPainter({this.progress = 1.0}); // Default to fully drawn
+  OPainter({this.progress = 1.0, required this.color}); // Modified constructor
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF209CEE) // Blue
+      ..color = color // Use the field
       ..strokeWidth = 8.0
       ..style = PaintingStyle.stroke;
 
@@ -26,6 +27,6 @@ class OPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant OPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import '../logic/game_state.dart';      
 import '../logic/ai_difficulty.dart';  // Added import
+import '../themes/color_schemes.dart'; // Added import
 
 // Helper class for difficulty details
 class DifficultyDetails {
@@ -40,6 +41,7 @@ class _DifficultyScreenState extends State<DifficultyScreen> {
   @override
   Widget build(BuildContext context) {
     final details = _getDifficultyDetails(_sliderValue); // Call helper
+    final AppColorScheme scheme = Provider.of<GameState>(context).currentColorScheme; // Access scheme
 
     return Scaffold(
       appBar: AppBar(
@@ -75,10 +77,9 @@ class _DifficultyScreenState extends State<DifficultyScreen> {
                 trackHeight: 8.0,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12.0),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 20.0),
-                // Optional: customize colors if needed
-                // activeTrackColor: Theme.of(context).colorScheme.primary,
-                // inactiveTrackColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                // thumbColor: Theme.of(context).colorScheme.primary,
+                activeTrackColor: scheme.accentColor, 
+                inactiveTrackColor: scheme.accentColor.withOpacity(0.3), 
+                thumbColor: scheme.accentColor, 
               ),
               child: Row(
                 children: <Widget>[

@@ -1,34 +1,47 @@
 import 'package:flutter/material.dart';
-import '../logic/game_state.dart'; // Import GameMode
+import 'package:provider/provider.dart'; // Added import
+import '../logic/game_state.dart'; // Covers GameState and GameMode
+import '../themes/color_schemes.dart'; // Added import
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final AppColorScheme scheme = Provider.of<GameState>(context).currentColorScheme; // Access scheme
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Super Tic Tac Toe'),
         automaticallyImplyLeading: false, // No back button to a previous screen
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings', // Optional: for accessibility
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
+            Text( // Updated first Text widget
               'Super Tic Tac Toe',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Colors.blueAccent, // Example color
+                color: scheme.accentColor, // New color from scheme
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+            Text( // Updated second Text widget
               'Flutter Edition',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.grey[700],
+                color: scheme.secondaryText, // New color from scheme
               ),
             ),
             const SizedBox(height: 60),

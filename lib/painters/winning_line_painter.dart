@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 class WinningLinePainter extends CustomPainter {
   final List<Offset> lineCoords; // Start and End points
-  final String player; // 'X' or 'O'
   final double progress;
+  final Color lineColor; // Added
 
   WinningLinePainter({
     required this.lineCoords,
-    required this.player,
     required this.progress,
+    required this.lineColor, // Added
   });
 
   @override
@@ -16,8 +16,8 @@ class WinningLinePainter extends CustomPainter {
     if (lineCoords.isEmpty || progress == 0) return;
 
     final paint = Paint()
-      ..color = (player == 'X') ? const Color(0xFFFF3860) : const Color(0xFF209CEE) // Red for X, Blue for O
-      ..strokeWidth = 10.0 // As per spec
+      ..color = lineColor // New logic
+      ..strokeWidth = 8.0 // Ensure this is 8.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
@@ -37,7 +37,7 @@ class WinningLinePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant WinningLinePainter oldDelegate) {
     return oldDelegate.lineCoords != lineCoords || 
-           oldDelegate.player != player || 
-           oldDelegate.progress != progress;
+           oldDelegate.progress != progress ||
+           oldDelegate.lineColor != lineColor; // Updated
   }
 }
