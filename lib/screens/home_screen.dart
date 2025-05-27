@@ -145,9 +145,11 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
 
     return Scaffold(
       // appBar: AppBar(title: const Text('')), // AppBar removed
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: Padding(
+        padding: const EdgeInsets.only(top: kToolbarHeight), // Added top padding
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -194,6 +196,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
             // ElevatedButton(...) // Removed Reset Button
             // const SizedBox(height: 20), // Removed SizedBox below button
           ],
+          ),
         ),
       ),
     );
