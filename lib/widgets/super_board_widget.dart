@@ -209,42 +209,32 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
         // These should already be correctly accessed in the original code.
 
         return Stack(
-          clipBehavior: Clip.hardEdge,
+          // clipBehavior: Clip.hardEdge, // Removed
           children: [
             AspectRatio(
               aspectRatio: 1.0, 
-              child: Container( 
-                color: Colors.red.withOpacity(0.2),
-                child: CustomPaint(
-                  painter: SuperGridPainter(
-                    progress: _mainGridAnimation.value,
-                    gridColor: scheme.superGridColor,
-                  ),
-                  child: Container( 
-                    color: Colors.blue.withOpacity(0.2),
-                    child: SizedBox(
-                      width: currentBoardSize.width,
-                      height: currentBoardSize.height,
-                      child: GridView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                        itemCount: 9,
-                        itemBuilder: (context, index) {
-                          String? boardStatus = gameState.superBoardState[index];
-                          return Padding(
-                            padding: const EdgeInsets.all(6.0),
-                            child: MiniBoardWidget(
-                              key: _miniBoardKeys[index],
-                              miniBoardIndex: index,
-                              isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
-                              startAnimation: _startMiniBoardAnimations,
-                              boardStatus: boardStatus,
-                            ),
-                          );
-                        },
+              child: CustomPaint(
+                painter: SuperGridPainter(
+                  progress: _mainGridAnimation.value,
+                  gridColor: scheme.superGridColor,
+                ),
+                child: GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                  itemCount: 9,
+                  itemBuilder: (context, index) {
+                    String? boardStatus = gameState.superBoardState[index];
+                    return Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: MiniBoardWidget(
+                        key: _miniBoardKeys[index],
+                        miniBoardIndex: index,
+                        isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
+                        startAnimation: _startMiniBoardAnimations,
+                        boardStatus: boardStatus,
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
             ), // Comma after AspectRatio widget
