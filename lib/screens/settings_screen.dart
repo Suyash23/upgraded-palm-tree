@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../logic/game_state.dart'; // Adjust path if necessary
+import '../themes/button_styles.dart'; // Added import
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -27,6 +28,7 @@ class SettingsScreen extends StatelessWidget {
                   Provider.of<GameState>(context, listen: false).setColorScheme(ColorSchemeChoice.scheme1);
                   Navigator.of(context).pop();
                 },
+                style: roundedSquareButtonStyle,
                 child: const Text('Color Scheme 1'),
               ),
               const SizedBox(height: 20),
@@ -35,6 +37,7 @@ class SettingsScreen extends StatelessWidget {
                   Provider.of<GameState>(context, listen: false).setColorScheme(ColorSchemeChoice.scheme2);
                   Navigator.of(context).pop();
                 },
+                style: roundedSquareButtonStyle,
                 child: const Text('Color Scheme 2'),
               ),
               const SizedBox(height: 20),
@@ -43,6 +46,7 @@ class SettingsScreen extends StatelessWidget {
                   Provider.of<GameState>(context, listen: false).setColorScheme(ColorSchemeChoice.scheme3);
                   Navigator.of(context).pop();
                 },
+                style: roundedSquareButtonStyle,
                 child: const Text('Color Scheme 3'),
               ),
             ],

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart'; // For kDebugMode
 import '../logic/game_state.dart';
 import '../widgets/super_board_widget.dart';
 import '../themes/color_schemes.dart'; // Added import
+import '../themes/button_styles.dart'; // Added import
 
 class HomeScreen extends StatefulWidget { // Changed to StatefulWidget
   const HomeScreen({super.key});
@@ -129,13 +130,15 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
                       // It internally calls gameState.resetGame().
                       _resetGame(gameStateForUI); // Use gameStateForUI or a new Provider.of with listen:false
                     },
-                    child: const Text("Reset Game"),
+                    style: roundedSquareButtonStyle,
+                    child: const Icon(Icons.refresh),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
                     },
-                    child: const Text("Go to Home"),
+                    style: roundedSquareButtonStyle,
+                    child: const Icon(Icons.home),
                   ),
                 ],
               ),

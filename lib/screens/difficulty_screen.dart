@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart'; // For kDebugMode
 import '../logic/game_state.dart';      
 import '../logic/ai_difficulty.dart';  // Added import
 import '../themes/color_schemes.dart'; // Added import
+import '../themes/button_styles.dart'; // Added import
 
 // Helper class for difficulty details
 class DifficultyDetails {
@@ -144,8 +145,8 @@ class _DifficultyScreenState extends State<DifficultyScreen> {
                 // Use pushReplacementNamed to prevent going back to difficulty screen from game screen
                 Navigator.of(context).pushReplacementNamed('/game');
               },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16.0)
+              style: roundedSquareButtonStyle.copyWith(
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 16.0))
               ),
               child: const Text('Start Game', style: TextStyle(fontSize: 18)),
             ),

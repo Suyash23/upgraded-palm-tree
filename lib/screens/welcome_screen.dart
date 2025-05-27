@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Added import
 import '../logic/game_state.dart'; // Covers GameState and GameMode
 import '../themes/color_schemes.dart'; // Added import
+import '../themes/button_styles.dart'; // Added import
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -46,9 +47,9 @@ class WelcomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 60),
             ElevatedButton( // First button
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                textStyle: const TextStyle(fontSize: 18),
+              style: roundedSquareButtonStyle.copyWith(
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 40, vertical: 20)),
+                textStyle: MaterialStateProperty.all(const TextStyle(fontSize: 18))
               ),
               onPressed: () { // Correctly defined onPressed
                 Navigator.pushReplacementNamed(
@@ -61,9 +62,9 @@ class WelcomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ElevatedButton( // Second button
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                textStyle: const TextStyle(fontSize: 18),
+              style: roundedSquareButtonStyle.copyWith(
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 40, vertical: 20)),
+                textStyle: MaterialStateProperty.all(const TextStyle(fontSize: 18))
               ),
               onPressed: () {
                 // Setting GameMode and AIDifficulty will now be handled by DifficultyScreen
