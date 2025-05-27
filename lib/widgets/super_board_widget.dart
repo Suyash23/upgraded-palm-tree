@@ -200,20 +200,25 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
       builder: (context, constraints) {
         final Size currentBoardSize = constraints.biggest;
         return Stack(
+          clipBehavior: Clip.hardEdge, // Added clipBehavior
           children: [
             AspectRatio(
               aspectRatio: 1.0,
-              child: CustomPaint(
-                painter: SuperGridPainter(
-                  progress: _mainGridAnimation.value,
-                  gridColor: scheme.superGridColor,
-                ),
-                child: SizedBox(
-                  width: currentBoardSize.width,
-                  height: currentBoardSize.height,
-                  child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+              child: Container( // Wrapped CustomPaint with Container
+                color: Colors.red.withOpacity(0.2), // Added red background
+                child: CustomPaint(
+                  painter: SuperGridPainter(
+                    progress: _mainGridAnimation.value,
+                    gridColor: scheme.superGridColor,
+                  ),
+                  child: Container( // Wrapped SizedBox with Container
+                    color: Colors.blue.withOpacity(0.2), // Added blue background
+                    child: SizedBox(
+                      width: currentBoardSize.width,
+                      height: currentBoardSize.height,
+                      child: GridView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
                     itemCount: 9,
                     itemBuilder: (context, index) {
                       String? boardStatus = gameState.superBoardState[index];
