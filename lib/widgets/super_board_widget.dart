@@ -206,14 +206,14 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
               aspectRatio: 1.0,
               child: Container( // Wrapped CustomPaint with Container
                 color: Colors.red.withOpacity(0.2), // Added red background
-                child: CustomPaint(
+                child: CustomPaint( // Added 'child:'
                   painter: SuperGridPainter(
                     progress: _mainGridAnimation.value,
                     gridColor: scheme.superGridColor,
                   ),
                   child: Container( // Wrapped SizedBox with Container
                     color: Colors.blue.withOpacity(0.2), // Added blue background
-                    child: SizedBox(
+                    child: SizedBox( // Added 'child:'
                       width: currentBoardSize.width,
                       height: currentBoardSize.height,
                       child: GridView.builder(
@@ -237,6 +237,18 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
                 ),
               ),
             ),
+            if (_isSuperWinAnimationPlaying && _superWinningLineAnimation != null && _superWinningLineCoords != null && _superWinnerForAnimation != null)
+              Positioned.fill( 
+                child: CustomPaint(
+                  painter: SuperWinningLinePainter(
+                    lineCoords: _superWinningLineCoords!,
+                    progress: _superWinningLineAnimation!.value,
+                    lineColor: (_superWinnerForAnimation == 'X') ? scheme.xColor : scheme.oColor, // Use scheme color
+                  ),
+                  size: currentBoardSize,
+                ),
+              ),
+            ), // <--- Added comma here
             if (_isSuperWinAnimationPlaying && _superWinningLineAnimation != null && _superWinningLineCoords != null && _superWinnerForAnimation != null)
               Positioned.fill( 
                 child: CustomPaint(
