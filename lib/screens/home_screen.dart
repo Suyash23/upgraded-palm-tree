@@ -116,11 +116,9 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
 
     return Scaffold(
       // appBar: AppBar(title: const Text('')), // AppBar removed
-      body: Padding(
-        padding: const EdgeInsets.only(top: kToolbarHeight), // Added top padding
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -169,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
           ],
           ),
         ),
-      ),
+      // ), // Padding widget removed
     );
   }
 }
