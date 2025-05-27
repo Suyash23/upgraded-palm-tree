@@ -13,9 +13,10 @@ class WelcomeScreen extends StatelessWidget {
 
     return Scaffold(
       // appBar: AppBar(...) // AppBar removed
-      body: Stack( // Changed body to Stack
-        children: <Widget>[
-          Center( // Original content wrapped in Center
+      body: SafeArea( // New SafeArea widget
+        child: Stack(
+          children: <Widget>[
+            Center( // Original content wrapped in Center
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -93,7 +94,8 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
+        ),
+      ), // End of SafeArea
     );
   }
 }
