@@ -12,23 +12,13 @@ class WelcomeScreen extends StatelessWidget {
     final AppColorScheme scheme = Provider.of<GameState>(context).currentColorScheme; // Access scheme
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(''),
-        automaticallyImplyLeading: false, // No back button to a previous screen
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings', // Optional: for accessibility
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings');
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+      // appBar: AppBar(...) // AppBar removed
+      body: Stack( // Changed body to Stack
+        children: <Widget>[
+          Center( // Original content wrapped in Center
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
             Text( // Updated first Text widget
               'Super Tic Tac Toe',
               style: TextStyle(
@@ -80,8 +70,29 @@ class WelcomeScreen extends StatelessWidget {
             //   },
             //   child: const Text('How to Play?'),
             // ),
-          ],
-        ),
+          // Optionally, add a "How to Play" button later
+          // const SizedBox(height: 40),
+          // TextButton(
+          //   onPressed: () {
+          //     // TODO: Show rules dialog or navigate to rules screen
+          //   },
+          //   child: const Text('How to Play?'),
+          // ),
+              ],
+            ),
+          ),
+          Positioned( // Settings IconButton positioned on top
+            top: 16.0,
+            right: 16.0,
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: 'Settings',
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
