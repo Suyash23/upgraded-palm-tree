@@ -199,63 +199,63 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
     return LayoutBuilder( 
       builder: (context, constraints) {
         final Size currentBoardSize = constraints.biggest;
+        // Assuming 'gameState', 'scheme', 'activeMiniBoardIndex', 
+        // '_mainGridAnimation', '_startMiniBoardAnimations', '_miniBoardKeys',
+        // '_isSuperWinAnimationPlaying', '_superWinningLineAnimation', 
+        // '_superWinningLineCoords', '_superWinnerForAnimation' 
+        // are correctly defined and in scope (e.g., from Provider or state fields).
+        // Example: final gameState = Provider.of<GameState>(context);
+        // Example: final AppColorScheme scheme = gameState.currentColorScheme;
+        // These should already be correctly accessed in the original code.
+
         return Stack(
-          clipBehavior: Clip.hardEdge, // Added clipBehavior
+          clipBehavior: Clip.hardEdge,
           children: [
             AspectRatio(
-              aspectRatio: 1.0,
-              child: Container( // Wrapped CustomPaint with Container
-                color: Colors.red.withOpacity(0.2), // Added red background
-                child: CustomPaint( // Added 'child:'
+              aspectRatio: 1.0, 
+              child: Container( 
+                color: Colors.red.withOpacity(0.2),
+                child: CustomPaint(
                   painter: SuperGridPainter(
                     progress: _mainGridAnimation.value,
                     gridColor: scheme.superGridColor,
                   ),
-                  child: Container( // Wrapped SizedBox with Container
-                    color: Colors.blue.withOpacity(0.2), // Added blue background
-                    child: SizedBox( // Added 'child:'
+                  child: Container( 
+                    color: Colors.blue.withOpacity(0.2),
+                    child: SizedBox(
                       width: currentBoardSize.width,
                       height: currentBoardSize.height,
                       child: GridView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                    itemCount: 9,
-                    itemBuilder: (context, index) {
-                      String? boardStatus = gameState.superBoardState[index];
-                      return Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: MiniBoardWidget(
-                          key: _miniBoardKeys[index],
-                          miniBoardIndex: index,
-                          isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
-                          startAnimation: _startMiniBoardAnimations,
-                          boardStatus: boardStatus,
-                        ),
-                      );
-                    },
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                        itemCount: 9,
+                        itemBuilder: (context, index) {
+                          String? boardStatus = gameState.superBoardState[index];
+                          return Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: MiniBoardWidget(
+                              key: _miniBoardKeys[index],
+                              miniBoardIndex: index,
+                              isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
+                              startAnimation: _startMiniBoardAnimations,
+                              boardStatus: boardStatus,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ), // Comma after AspectRatio widget
+            
             if (_isSuperWinAnimationPlaying && _superWinningLineAnimation != null && _superWinningLineCoords != null && _superWinnerForAnimation != null)
               Positioned.fill( 
                 child: CustomPaint(
                   painter: SuperWinningLinePainter(
                     lineCoords: _superWinningLineCoords!,
                     progress: _superWinningLineAnimation!.value,
-                    lineColor: (_superWinnerForAnimation == 'X') ? scheme.xColor : scheme.oColor, // Use scheme color
-                  ),
-                  size: currentBoardSize,
-                ),
-              ),
-            ), // <--- Added comma here
-            if (_isSuperWinAnimationPlaying && _superWinningLineAnimation != null && _superWinningLineCoords != null && _superWinnerForAnimation != null)
-              Positioned.fill( 
-                child: CustomPaint(
-                  painter: SuperWinningLinePainter(
-                    lineCoords: _superWinningLineCoords!,
-                    progress: _superWinningLineAnimation!.value,
-                    lineColor: (_superWinnerForAnimation == 'X') ? scheme.xColor : scheme.oColor, // Use scheme color
+                    lineColor: (_superWinnerForAnimation == 'X') ? scheme.xColor : scheme.oColor,
                   ),
                   size: currentBoardSize,
                 ),
