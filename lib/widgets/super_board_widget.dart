@@ -208,25 +208,26 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
                   progress: _mainGridAnimation.value,
                   gridColor: scheme.superGridColor,
                 ),
-                child: Transform.translate(
-                  offset: Offset(0, -currentBoardSize.height / 6),
+                child: SizedBox(
+                  width: currentBoardSize.width,
+                  height: currentBoardSize.height,
                   child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                  itemCount: 9,
-                  itemBuilder: (context, index) {
-                    String? boardStatus = gameState.superBoardState[index];
-                    return Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: MiniBoardWidget(
-                        key: _miniBoardKeys[index],
-                        miniBoardIndex: index,
-                        isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
-                        startAnimation: _startMiniBoardAnimations,
-                        boardStatus: boardStatus,
-                      ),
-                    );
-                  },
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                    itemCount: 9,
+                    itemBuilder: (context, index) {
+                      String? boardStatus = gameState.superBoardState[index];
+                      return Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: MiniBoardWidget(
+                          key: _miniBoardKeys[index],
+                          miniBoardIndex: index,
+                          isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
+                          startAnimation: _startMiniBoardAnimations,
+                          boardStatus: boardStatus,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
