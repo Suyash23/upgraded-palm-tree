@@ -199,7 +199,17 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
     return LayoutBuilder( 
       builder: (context, constraints) {
         final Size currentBoardSize = constraints.biggest;
+        // Assuming 'gameState', 'scheme', 'activeMiniBoardIndex',
+        // '_mainGridAnimation', '_startMiniBoardAnimations', '_miniBoardKeys',
+        // '_isSuperWinAnimationPlaying', '_superWinningLineAnimation',
+        // '_superWinningLineCoords', '_superWinnerForAnimation'
+        // are correctly defined and in scope (e.g., from Provider or state fields).
+        // Example: final gameState = Provider.of<GameState>(context);
+        // Example: final AppColorScheme scheme = gameState.currentColorScheme;
+        // These should already be correctly accessed in the original code.
+
         return Stack(
+          // clipBehavior: Clip.hardEdge, // Removed
           children: [
             AspectRatio(
               aspectRatio: 1.0,
@@ -221,20 +231,21 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
                         miniBoardIndex: index,
                         isPlayable: (activeMiniBoardIndex == null || activeMiniBoardIndex == index) && boardStatus == null,
                         startAnimation: _startMiniBoardAnimations,
-                        boardStatus: boardStatus, 
+                        boardStatus: boardStatus,
                       ),
                     );
                   },
                 ),
               ),
-            ),
+            ), // Comma after AspectRatio widget
+
             if (_isSuperWinAnimationPlaying && _superWinningLineAnimation != null && _superWinningLineCoords != null && _superWinnerForAnimation != null)
               Positioned.fill( 
                 child: CustomPaint(
                   painter: SuperWinningLinePainter(
                     lineCoords: _superWinningLineCoords!,
                     progress: _superWinningLineAnimation!.value,
-                    lineColor: (_superWinnerForAnimation == 'X') ? scheme.xColor : scheme.oColor, // Use scheme color
+                    lineColor: (_superWinnerForAnimation == 'X') ? scheme.xColor : scheme.oColor,
                   ),
                   size: currentBoardSize,
                 ),

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart'; // For kDebugMode
 import '../logic/game_state.dart';
 import '../widgets/super_board_widget.dart';
 import '../themes/color_schemes.dart'; // Added import
+import '../themes/button_styles.dart'; // Added import
 
 class HomeScreen extends StatefulWidget { // Changed to StatefulWidget
   const HomeScreen({super.key});
@@ -22,43 +23,48 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Retrieve route arguments and set game mode
-    final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is GameMode) {
-      final gameState = Provider.of<GameState>(context, listen: false);
-      if (kDebugMode) {
-        print("[HomeScreen.didChangeDependencies] Received game mode from arguments: $arguments. Setting game mode.");
-      }
-      gameState.setGameMode(arguments);
-    }
-
     if (!_gameModeInitialized) {
-      final gameState = Provider.of<GameState>(context, listen: false);
-      // currentGameMode should already be correctly set by DifficultyScreen
-      // or by the logic above before navigating to HomeScreen.
-      // We just want to ensure the board is reset for a new game session.
-      if (kDebugMode) {
-        print("[HomeScreen.didChangeDependencies] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
-      }
-      // _resetGame calls gameState.resetGame(), which clears the board, player, winner, etc.,
-      // but should NOT change currentGameMode or selectedAIDifficulty.
-      _resetGame(gameState); 
-      _gameModeInitialized = true;
+      _gameModeInitialized = true; // Set flag immediately
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return; // Check if widget is still in the tree
+
+        final arguments = ModalRoute.of(context)?.settings.arguments;
+        final gameState = Provider.of<GameState>(context, listen: false);
+
+        if (arguments is GameMode) {
+          if (kDebugMode) {
+            print("[HomeScreen.didChangeDependencies.postFrame] Received game mode from arguments: $arguments. Setting game mode.");
+          }
+          gameState.setGameMode(arguments);
+        }
+
+        if (kDebugMode) {
+          print("[HomeScreen.didChangeDependencies.postFrame] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
+        }
+        _resetGame(gameState, inPostFrameCallback: true);
+      });
     }
   }
 
-  void _resetGame(GameState gameState) {
-    // GameState.resetGame() now correctly does not reset currentGameMode.
-    // It just clears board, player, winner status.
-    gameState.resetGame(); 
+  void _resetGame(GameState gameState, {bool inPostFrameCallback = false}) {
+    gameState.resetGame(); // This calls notifyListeners() in GameState
     
-    // If we want to ensure the current mode (possibly set from args) is active 
-    // before animations re-trigger, this is implicitly handled as setGameMode was called.
-    // No need to call gameState.setGameMode(gameState.currentGameMode) again here.
-
-    setState(() {
-      _superBoardKey = UniqueKey(); 
-    });
+    if (inPostFrameCallback) {
+      if (mounted) {
+        setState(() {
+          _superBoardKey = UniqueKey();
+        });
+      }
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _superBoardKey = UniqueKey();
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -109,10 +115,11 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Super Tic Tac Toe')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      // appBar: AppBar(title: const Text('')), // AppBar removed
+      body: SafeArea( // New SafeArea widget
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -129,13 +136,15 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
                       // It internally calls gameState.resetGame().
                       _resetGame(gameStateForUI); // Use gameStateForUI or a new Provider.of with listen:false
                     },
-                    child: const Text("Reset Game"),
+                    style: roundedSquareButtonStyle,
+                    child: const Icon(Icons.refresh),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
                     },
-                    child: const Text("Go to Home"),
+                    style: roundedSquareButtonStyle,
+                    child: const Icon(Icons.home),
                   ),
                 ],
               ),
@@ -148,17 +157,18 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
               color: scheme.scaffoldBackground, // New logic
               child: SuperBoardWidget(key: _superBoardKey), // Use the key here
             ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(statusText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
-            ),
+            // const SizedBox(height: 20), // Removed
+            // Padding( // Removed
+            //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            //   child: Text(statusText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+            // ), // Removed
             // const SizedBox(height: 20), // Removed SizedBox above button
             // ElevatedButton(...) // Removed Reset Button
             // const SizedBox(height: 20), // Removed SizedBox below button
           ],
+          ),
         ),
-      ),
+      ), // End of SafeArea
     );
   }
 }

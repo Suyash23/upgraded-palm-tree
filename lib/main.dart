@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart'; // Added import
 import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart'; // Import WelcomeScreen
 import 'screens/difficulty_screen.dart'; // Import DifficultyScreen
@@ -7,7 +8,13 @@ import 'screens/settings_screen.dart'; // Add this import
 import 'logic/game_state.dart';
 import 'themes/color_schemes.dart'; // Assuming this path
 
-void main() {
+Future<void> main() async { // Made main async
+  WidgetsFlutterBinding.ensureInitialized(); // Ensured bindings
+  await SystemChrome.setPreferredOrientations([ // Set preferred orientations
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => GameState(),

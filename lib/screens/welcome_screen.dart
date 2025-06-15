@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Added import
 import '../logic/game_state.dart'; // Covers GameState and GameMode
 import '../themes/color_schemes.dart'; // Added import
+import '../themes/button_styles.dart'; // Added import
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -11,23 +12,14 @@ class WelcomeScreen extends StatelessWidget {
     final AppColorScheme scheme = Provider.of<GameState>(context).currentColorScheme; // Access scheme
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Super Tic Tac Toe'),
-        automaticallyImplyLeading: false, // No back button to a previous screen
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Settings', // Optional: for accessibility
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings');
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      // appBar: AppBar(...) // AppBar removed
+      body: SafeArea( // New SafeArea widget
+        child: Stack(
           children: <Widget>[
+            Center( // Original content wrapped in Center
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
             Text( // Updated first Text widget
               'Super Tic Tac Toe',
               style: TextStyle(
@@ -36,19 +28,19 @@ class WelcomeScreen extends StatelessWidget {
                 color: scheme.accentColor, // New color from scheme
               ),
             ),
-            const SizedBox(height: 10),
-            Text( // Updated second Text widget
-              'Flutter Edition',
-              style: TextStyle(
-                fontSize: 18,
-                color: scheme.secondaryText, // New color from scheme
-              ),
-            ),
+            // const SizedBox(height: 10), // Removed
+            // Text( // Updated second Text widget // Removed
+            //   'Flutter Edition',
+            //   style: TextStyle(
+            //     fontSize: 18,
+            //     color: scheme.secondaryText, // New color from scheme
+            //   ),
+            // ), // Removed
             const SizedBox(height: 60),
             ElevatedButton( // First button
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                textStyle: const TextStyle(fontSize: 18),
+              style: roundedSquareButtonStyle.copyWith(
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 40, vertical: 20)),
+                textStyle: MaterialStateProperty.all(const TextStyle(fontSize: 18))
               ),
               onPressed: () { // Correctly defined onPressed
                 Navigator.pushReplacementNamed(
@@ -61,9 +53,9 @@ class WelcomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ElevatedButton( // Second button
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                textStyle: const TextStyle(fontSize: 18),
+              style: roundedSquareButtonStyle.copyWith(
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 40, vertical: 20)),
+                textStyle: MaterialStateProperty.all(const TextStyle(fontSize: 18))
               ),
               onPressed: () {
                 // Setting GameMode and AIDifficulty will now be handled by DifficultyScreen
@@ -79,9 +71,31 @@ class WelcomeScreen extends StatelessWidget {
             //   },
             //   child: const Text('How to Play?'),
             // ),
-          ],
+          // Optionally, add a "How to Play" button later
+          // const SizedBox(height: 40),
+          // TextButton(
+          //   onPressed: () {
+          //     // TODO: Show rules dialog or navigate to rules screen
+          //   },
+          //   child: const Text('How to Play?'),
+          // ),
+              ],
+            ),
+          ),
+          Positioned( // Settings IconButton positioned on top
+            top: 16.0,
+            right: 16.0,
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              tooltip: 'Settings',
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+          ),
+        ],
         ),
-      ),
+      ), // End of SafeArea
     );
   }
 }

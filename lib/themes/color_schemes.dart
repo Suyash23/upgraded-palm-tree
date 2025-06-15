@@ -73,7 +73,7 @@ class AppColorSchemes {
     buttonBackground: Color(0xFF333333), // Medium-dark grey buttons
     buttonText: Colors.white,
     miniGridColor: Color(0xFF4A4A4A), // Medium grey
-    activeMiniGridColor: Color(0xFF6D6D6D), // Lighter grey for active mini grid
+    activeMiniGridColor: const Color(0xFFEEF1E8), // Changed to this
     superGridColor: Color(0xFF6E6E6E), // Lighter grey for main grid lines
     xColor: Color(0xFFFF3D00), // Vibrant orange/red
     oColor: Color(0xFF00E676), // Vibrant green
