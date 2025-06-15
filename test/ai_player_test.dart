@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supertictactoe/logic/ai_player.dart';
-import 'package:supertictactoe/logic/game_state.dart';
-import 'package:supertictactoe/logic/ai_difficulty.dart';
-import 'package:supertictactoe/logic/ai_move.dart';
+import 'package:super_tictactoe_flutter/logic/ai_player.dart';
+import 'package:super_tictactoe_flutter/logic/game_state.dart';
+import 'package:super_tictactoe_flutter/logic/ai_difficulty.dart';
+import 'package:super_tictactoe_flutter/logic/ai_move.dart';
 
 // Helper function to create a GameState and optionally set up a mini-board.
 // It also sets the AI as the current player ('O').
