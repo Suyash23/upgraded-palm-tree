@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
           }
           gameState.setGameMode(arguments);
         }
-        
+
         if (kDebugMode) {
           print("[HomeScreen.didChangeDependencies.postFrame] Initializing. Current mode from GameState: ${gameState.currentGameMode}. Resetting game board.");
         }
@@ -157,11 +157,11 @@ class _HomeScreenState extends State<HomeScreen> { // New State class
               color: scheme.scaffoldBackground, // New logic
               child: SuperBoardWidget(key: _superBoardKey), // Use the key here
             ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(statusText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
-            ),
+            // const SizedBox(height: 20), // Removed
+            // Padding( // Removed
+            //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            //   child: Text(statusText, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+            // ), // Removed
             // const SizedBox(height: 20), // Removed SizedBox above button
             // ElevatedButton(...) // Removed Reset Button
             // const SizedBox(height: 20), // Removed SizedBox below button

@@ -199,10 +199,10 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
     return LayoutBuilder( 
       builder: (context, constraints) {
         final Size currentBoardSize = constraints.biggest;
-        // Assuming 'gameState', 'scheme', 'activeMiniBoardIndex', 
+        // Assuming 'gameState', 'scheme', 'activeMiniBoardIndex',
         // '_mainGridAnimation', '_startMiniBoardAnimations', '_miniBoardKeys',
-        // '_isSuperWinAnimationPlaying', '_superWinningLineAnimation', 
-        // '_superWinningLineCoords', '_superWinnerForAnimation' 
+        // '_isSuperWinAnimationPlaying', '_superWinningLineAnimation',
+        // '_superWinningLineCoords', '_superWinnerForAnimation'
         // are correctly defined and in scope (e.g., from Provider or state fields).
         // Example: final gameState = Provider.of<GameState>(context);
         // Example: final AppColorScheme scheme = gameState.currentColorScheme;
@@ -212,7 +212,7 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
           // clipBehavior: Clip.hardEdge, // Removed
           children: [
             AspectRatio(
-              aspectRatio: 1.0, 
+              aspectRatio: 1.0,
               child: CustomPaint(
                 painter: SuperGridPainter(
                   progress: _mainGridAnimation.value,
@@ -238,7 +238,7 @@ class _SuperBoardWidgetState extends State<SuperBoardWidget>
                 ),
               ),
             ), // Comma after AspectRatio widget
-            
+
             if (_isSuperWinAnimationPlaying && _superWinningLineAnimation != null && _superWinningLineCoords != null && _superWinnerForAnimation != null)
               Positioned.fill( 
                 child: CustomPaint(
