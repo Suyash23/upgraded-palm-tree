@@ -178,7 +178,7 @@ void main() {
 
       test('should block an opponent\'s immediate winning move', () {
         final gameState = _createGameState(
-          initialMiniBoardState: ['X', 'X', null, 'O', 'O', null, null, null, null],
+          initialMiniBoardState: ['X', 'X', null, 'O', null, 'X', 'O', null, null],
           activeMiniBoard: 0,
           currentPlayer: 'O'
         );
