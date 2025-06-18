@@ -63,6 +63,17 @@ class WelcomeScreen extends StatelessWidget {
               },
               child: const Text('Play vs AI'),
             ),
+            const SizedBox(height: 20), // Spacing for the new button
+            ElevatedButton( // New "Rules" button
+              style: roundedSquareButtonStyle.copyWith(
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 40, vertical: 20)),
+                textStyle: MaterialStateProperty.all(const TextStyle(fontSize: 18)),
+              ),
+              onPressed: () {
+                Navigator.pushNamed(context, '/rules');
+              },
+              child: const Text('Rules'),
+            ),
             // Optionally, add a "How to Play" button later
             // const SizedBox(height: 40),
             // TextButton(

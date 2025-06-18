@@ -5,6 +5,7 @@ import 'screens/home_screen.dart';
 import 'screens/welcome_screen.dart'; // Import WelcomeScreen
 import 'screens/difficulty_screen.dart'; // Import DifficultyScreen
 import 'screens/settings_screen.dart'; // Add this import
+import 'screens/rules_screen.dart'; // Added import
 import 'logic/game_state.dart';
 import 'themes/color_schemes.dart'; // Assuming this path
 
@@ -76,6 +77,7 @@ class MyApp extends StatelessWidget {
             '/game': (context) => const HomeScreen(),
             '/difficulty': (context) => const DifficultyScreen(),
             '/settings': (context) => const SettingsScreen(),
+            '/rules': (context) => const RulesScreen(), // New route
           },
         );
       },
