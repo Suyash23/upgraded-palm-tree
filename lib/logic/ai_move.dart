@@ -4,4 +4,9 @@ class AIMove {
   final int cellIndex;
 
   AIMove(this.miniBoardIndex, this.cellIndex);
+
+  // New method to add
+  String toStringShort() {
+    return "$miniBoardIndex-$cellIndex";
+  }
 }

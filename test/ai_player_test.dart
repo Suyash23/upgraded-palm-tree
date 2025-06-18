@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supertictactoe/logic/ai_player.dart';
-import 'package:supertictactoe/logic/game_state.dart';
-import 'package:supertictactoe/logic/ai_difficulty.dart';
-import 'package:supertictactoe/logic/ai_move.dart';
+import 'package:super_tictactoe_flutter/logic/ai_player.dart';
+import 'package:super_tictactoe_flutter/logic/game_state.dart';
+import 'package:super_tictactoe_flutter/logic/ai_difficulty.dart';
+import 'package:super_tictactoe_flutter/logic/ai_move.dart';
 
 // Helper function to create a GameState and optionally set up a mini-board.
 // It also sets the AI as the current player ('O').
@@ -142,7 +142,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0); // Should play in the active board
-        expect(gameState.miniBoardStates[move.miniBoardIndex][move.cellIndex], isNull); // Cell should be empty
+        expect(gameState.miniBoardStates[move!.miniBoardIndex][move!.cellIndex], isNull); // Cell should be empty
       });
 
       test('should make a valid move in any open board if activeMiniBoardIndex is null', () {
@@ -173,12 +173,12 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 2, reason: "AI should complete the row 0-1-2");
+        expect(move!.cellIndex, 2, reason: "AI should complete the row 0-1-2");
       });
 
       test('should block an opponent\'s immediate winning move', () {
         final gameState = _createGameState(
-          initialMiniBoardState: ['X', 'X', null, 'O', 'O', null, null, null, null],
+          initialMiniBoardState: ['X', 'X', null, 'O', null, 'X', 'O', null, null],
           activeMiniBoard: 0,
           currentPlayer: 'O'
         );
@@ -187,7 +187,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 2, reason: "AI should block X's win at cell 2");
+        expect(move!.cellIndex, 2, reason: "AI should block X's win at cell 2");
       });
 
       test('should pick a winning move over blocking if both are available', () {
@@ -202,7 +202,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 2, reason: "AI should prioritize its own win.");
+        expect(move!.cellIndex, 2, reason: "AI should prioritize its own win.");
       });
 
       test('should make a random valid move if no win/block', () {
@@ -216,7 +216,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 5); // Only available spot
+        expect(move!.cellIndex, 5); // Only available spot
       });
     });
 
@@ -232,7 +232,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 5, reason: "AI should win at cell 5");
+        expect(move!.cellIndex, 5, reason: "AI should win at cell 5");
       });
 
       test('should block an opponent\'s immediate winning move', () {
@@ -246,7 +246,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 2, reason: "AI should block X's win at cell 2");
+        expect(move!.cellIndex, 2, reason: "AI should block X's win at cell 2");
       });
 
       // Test scenario: Hard AI should see a 2-move win setup.
@@ -292,7 +292,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 0, reason: "Hard AI should pick winning move (0,0)");
+        expect(move!.cellIndex, 0, reason: "Hard AI should pick winning move (0,0)");
       });
 
 
@@ -418,15 +418,15 @@ void main() {
         expect(hardMove2, isNotNull);
         if (mediumMove2?.cellIndex == 1 && hardMove2?.cellIndex == 2) {
           // This shows Hard AI made a different choice.
-          print("Hard AI avoided trap, Medium AI picked ${mediumMove2!.cellIndex}, Hard AI picked ${hardMove2.cellIndex}");
-          expect(hardMove2.cellIndex, 2, reason: "Hard AI should play (0,2) to send X to neutral MB2, avoiding MB1 where X can win.");
+          print("Hard AI avoided trap, Medium AI picked ${mediumMove2!.cellIndex}, Hard AI picked ${hardMove2!.cellIndex}");
+          expect(hardMove2!.cellIndex, 2, reason: "Hard AI should play (0,2) to send X to neutral MB2, avoiding MB1 where X can win.");
         } else {
           // This specific scenario might not trigger the difference perfectly without exact heuristic values.
           // The principle is what's being aimed for.
           print("DEBUG: Hard/Medium test. Medium: ${mediumMove2?.toStringShort()}, Hard: ${hardMove2?.toStringShort()}");
           // If they are the same, the test doesn't prove difference for *this* setup.
           // However, Hard AI should still make a valid move.
-           expect(hardMove2.cellIndex, isNotNull, reason: "Hard AI should still make a move.");
+           expect(hardMove2!.cellIndex, isNotNull, reason: "Hard AI should still make a move.");
         }
       });
     });
@@ -443,7 +443,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 2);
+        expect(move!.cellIndex, 2);
       });
 
       test('should block an opponent\'s immediate winning move', () {
@@ -457,7 +457,7 @@ void main() {
         final move = aiPlayer.getAIMove(gameState);
         expect(move, isNotNull);
         expect(move!.miniBoardIndex, 0);
-        expect(move.cellIndex, 2);
+        expect(move!.cellIndex, 2);
       });
 
       // Test scenario: Unfair AI should see a deeper trap or win than Hard AI.
@@ -503,13 +503,13 @@ void main() {
 
         expect(unfairMove, isNotNull);
         if (hardMove?.cellIndex == 1 && unfairMove?.cellIndex == 0) {
-          print("Unfair AI avoided deeper trap. Hard picked cell ${hardMove!.cellIndex} in MB0, Unfair picked cell ${unfairMove.cellIndex} in MB0.");
-          expect(unfairMove.cellIndex, 0, reason: "Unfair AI should choose safer (0,0) over risky (0,1).");
+          print("Unfair AI avoided deeper trap. Hard picked cell ${hardMove!.cellIndex} in MB0, Unfair picked cell ${unfairMove!.cellIndex} in MB0.");
+          expect(unfairMove!.cellIndex, 0, reason: "Unfair AI should choose safer (0,0) over risky (0,1).");
         } else {
           print("DEBUG: Unfair/Hard test. Hard: ${hardMove?.toStringShort()}, Unfair: ${unfairMove?.toStringShort()}");
           // This test is highly dependent on heuristic scores and precise setup.
           // If they make the same move, it doesn't mean Unfair AI isn't working, just that this setup isn't distinguishing them.
-          expect(unfairMove.cellIndex, isNotNull, reason: "Unfair AI should make a move.");
+          expect(unfairMove!.cellIndex, isNotNull, reason: "Unfair AI should make a move.");
         }
       });
     });
