@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math; // For math.pi and math.atan2
+import 'package:provider/provider.dart';
+import '../logic/game_state.dart';
+import '../themes/color_schemes.dart';
+import '../painters/mini_grid_painter.dart';
+import '../painters/x_painter.dart';
 
 class RulesScreen extends StatelessWidget {
   const RulesScreen({super.key});
@@ -74,6 +80,173 @@ class RulesScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// Helper widget for Rule #4 visual explanation
+class _Rule4VisualExplanation extends StatelessWidget {
+  const _Rule4VisualExplanation();
+
+  @override
+  Widget build(BuildContext context) {
+    final AppColorScheme scheme = Provider.of<GameState>(context).currentColorScheme;
+    const double boardSize = 75.0;
+    const double cellSize = boardSize / 3.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        const Text("Example:", style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic)),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            // Visual 1: Current Mini-Board Play
+            Expanded(
+              child: Column(
+                children: <Widget>[
+                  const Text("Your move in a mini-board:", textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: boardSize,
+                    height: boardSize,
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          painter: MiniGridPainter(
+                            isPlayable: true, // Example shows a playable board
+                            progress: 1.0,
+                            gridColor: scheme.miniGridColor,
+                            activeGridColor: scheme.activeMiniGridColor, // Though not strictly active for this exact explanation part
+                          ),
+                          size: const Size(boardSize, boardSize),
+                        ),
+                        Positioned(
+                          left: cellSize * 2, // Top-right cell (column 2)
+                          top: 0,             // Top-right cell (row 0)
+                          width: cellSize,
+                          height: cellSize,
+                          child: Padding(
+                            padding: const EdgeInsets.all(2.0), // Small padding for X
+                            child: CustomPaint(
+                              painter: XPainter(progress: 1.0, color: scheme.xColor),
+                              size: Size.infinite,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Visual 2: Arrow Icon
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.0),
+              child: Icon(Icons.arrow_forward, size: 30, color: Colors.black),
+            ),
+            // Visual 3: Target Super-Grid Cell Highlighted
+            Expanded(
+              child: Column(
+                children: <Widget>[
+                  const Text("Sends opponent to:", textAlign: TextAlign.center, style: TextStyle(fontSize: 12)),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: boardSize,
+                    height: boardSize,
+                    child: Stack(
+                      children: [
+                        Container(
+                          color: scheme.activeMiniGridColor.withOpacity(0.3), // Highlight background
+                        ),
+                        CustomPaint(
+                          painter: MiniGridPainter(
+                            isPlayable: false, // Target board is just shown, not necessarily playable by current player
+                            progress: 1.0,
+                            gridColor: scheme.miniGridColor,
+                            activeGridColor: scheme.activeMiniGridColor,
+                          ),
+                          size: const Size(boardSize, boardSize),
+                        ),
+                        // Optional: Could add a small text label like "Top-Right Board"
+                        // Center(child: Text("Top-Right\nBoard", style: TextStyle(fontSize: 10, color: Colors.black54), textAlign: TextAlign.center,))
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ArrowPainter extends CustomPainter {
+  final Offset startOffset;
+  final Offset endOffset;
+  final Color color;
+  final double strokeWidth;
+  final double arrowheadAngle;
+  final double arrowheadLength;
+
+  _ArrowPainter({
+    required this.startOffset,
+    required this.endOffset,
+    this.color = Colors.black,
+    this.strokeWidth = 2.0,
+    this.arrowheadAngle = math.pi / 6, // 30 degrees
+    this.arrowheadLength = 10.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Draw the line
+    canvas.drawLine(startOffset, endOffset, paint);
+
+    // Draw the arrowhead
+    final path = Path();
+    final double angle = math.atan2(endOffset.dy - startOffset.dy, endOffset.dx - startOffset.dx);
+
+    // Point 1 of arrowhead
+    path.moveTo(
+        endOffset.dx - arrowheadLength * math.cos(angle - arrowheadAngle),
+        endOffset.dy - arrowheadLength * math.sin(angle - arrowheadAngle),
+    );
+    // Tip of arrowhead
+    path.lineTo(endOffset.dx, endOffset.dy);
+    // Point 2 of arrowhead
+    path.lineTo(
+        endOffset.dx - arrowheadLength * math.cos(angle + arrowheadAngle),
+        endOffset.dy - arrowheadLength * math.sin(angle + arrowheadAngle),
+    );
+
+    // Close the path for a filled arrowhead, or draw lines for an open one.
+    // For a filled arrowhead, change paint style and close path.
+    // For now, let's make it an open arrowhead with lines.
+    // To make it filled:
+    // path.close();
+    // canvas.drawPath(path, paint..style = PaintingStyle.fill);
+    // For an open arrowhead (lines):
+    canvas.drawPath(path, paint); // This will draw the two lines of the arrowhead
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArrowPainter oldDelegate) {
+    return oldDelegate.startOffset != startOffset ||
+           oldDelegate.endOffset != endOffset ||
+           oldDelegate.color != color ||
+           oldDelegate.strokeWidth != strokeWidth ||
+           oldDelegate.arrowheadAngle != arrowheadAngle ||
+           oldDelegate.arrowheadLength != arrowheadLength;
   }
 }
 
